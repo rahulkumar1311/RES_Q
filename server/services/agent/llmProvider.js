@@ -25,26 +25,77 @@ export function extractDisasterIntent(query = "") {
     disasterType = "ROAD_BLOCKAGE";
   }
 
-  // Common patterns: "from <Origin> to <Destination>"
-  const fromToMatch = text.match(/from\s+([A-Za-z0-9\s\-]+?)\s+to\s+([A-Za-z0-9\s\-]+?)(?:\s+(?:during|in|avoiding|with|under)|$|\.|\,)/i);
+  // Helper to clean extracted location strings from noise words and phonetic typos
+  function cleanLocation(str) {
+    if (!str) return null;
+    let s = String(str)
+      .replace(/^(?:find|search|get|give|check|calculate|plan|show|navigate|evacuate|take|me)\s+/i, "")
+      .replace(/^(?:a\s+|the\s+)/i, "")
+      .replace(/^(?:safe|safest|alternative|emergency|best|quickest|fastest)\s+/i, "")
+      .replace(/^(?:route|root|routes|roots|path|corridor|transit|directions|navigation)\s+/i, "")
+      .replace(/^(?:from|between)\s+/i, "")
+      .replace(/\s+(?:during|in|avoiding|with|under|underneath|due\s+to|amid|conditions|now|safely|please).*$/i, "")
+      .replace(/[^\w\s\-]/g, " ")
+      .trim();
+    return s.length >= 2 ? s : null;
+  }
+
+  // Pattern 1: Explicit "from <Origin> to <Destination>"
+  const fromToMatch = text.match(/from\s+([A-Za-z0-9\s\-]+?)\s+(?:to|->|towards)\s+([A-Za-z0-9\s\-]+?)(?:\s+(?:during|in|avoiding|with|under|due\s+to)|$|\.|\,)/i);
   if (fromToMatch) {
-    origin = fromToMatch[1].trim();
-    destination = fromToMatch[2].trim();
-  } else {
-    // Pattern: "between <Origin> and <Destination>"
-    const betweenMatch = text.match(/between\s+([A-Za-z0-9\s\-]+?)\s+and\s+([A-Za-z0-9\s\-]+?)(?:\s+(?:during|in|avoiding|with|under)|$|\.|\,)/i);
+    origin = cleanLocation(fromToMatch[1]);
+    destination = cleanLocation(fromToMatch[2]);
+  }
+
+  // Pattern 2: "between <Origin> and <Destination>"
+  if (!origin || !destination) {
+    const betweenMatch = text.match(/between\s+([A-Za-z0-9\s\-]+?)\s+and\s+([A-Za-z0-9\s\-]+?)(?:\s+(?:during|in|avoiding|with|under|due\s+to)|$|\.|\,)/i);
     if (betweenMatch) {
-      origin = betweenMatch[1].trim();
-      destination = betweenMatch[2].trim();
+      origin = cleanLocation(betweenMatch[1]);
+      destination = cleanLocation(betweenMatch[2]);
     }
   }
 
-  // Scan against regional district/town dictionaries if not cleanly extracted
+  // Pattern 3: Generalized natural phrasing: "[optional prefix] <Origin> to <Destination>" (e.g. "find safe root jamui to patna")
+  if (!origin || !destination) {
+    const directToMatch = text.match(/(?:(?:find|search|get|check|calculate|plan|show|navigate)\s+)?(?:(?:safe|safest|alternative|emergency|best)\s+)?(?:(?:route|root|path|corridor|transit)\s+)?([A-Za-z0-9\s\-]{2,30}?)\s+(?:to|->|towards)\s+([A-Za-z0-9\s\-]{2,30}?)(?:\s+(?:during|in|avoiding|with|under|due\s+to|underneath)|$|\.|\,)/i);
+    if (directToMatch) {
+      origin = cleanLocation(directToMatch[1]);
+      destination = cleanLocation(directToMatch[2]);
+    }
+  }
+
+  // Pattern 4: Separator based "<Origin> - <Destination>" or "<Origin> / <Destination>"
+  if (!origin || !destination) {
+    const sepMatch = text.match(/([A-Za-z0-9\s]{2,25})\s*(?:[-–—/])\s*([A-Za-z0-9\s]{2,25})/);
+    if (sepMatch) {
+      origin = cleanLocation(sepMatch[1]);
+      destination = cleanLocation(sepMatch[2]);
+    }
+  }
+
+  // Scan against regional & pan-India district/town dictionaries if not cleanly extracted
   if (!origin || !destination) {
     const knownPlaces = [
       ...ASSAM_DISTRICTS,
       ...MEGHALAYA_DISTRICTS,
-      "Guwahati", "Dispur", "Shillong", "Nongpoh", "Jorabat", "Boko", "Saraighat", "Tezpur", "Silchar"
+      // Major national and regional cities
+      "Guwahati", "Dispur", "Shillong", "Nongpoh", "Jorabat", "Boko", "Saraighat", "Tezpur", "Silchar",
+      "Patna", "Jamui", "Gaya", "Bhagalpur", "Muzaffarpur", "Darbhanga", "Purnia", "Begusarai",
+      "Ranchi", "Jamshedpur", "Dhanbad", "Bokaro", "Deoghar",
+      "Kolkata", "Howrah", "Siliguri", "Asansol", "Durgapur",
+      "Delhi", "New Delhi", "Noida", "Gurugram", "Faridabad", "Ghaziabad",
+      "Mumbai", "Pune", "Nagpur", "Thane", "Nashik",
+      "Bengaluru", "Bangalore", "Mysuru", "Mangalore", "Hubli",
+      "Hyderabad", "Secunderabad", "Warangal", "Visakhapatnam", "Vijayawada",
+      "Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem",
+      "Ahmedabad", "Surat", "Vadodara", "Rajkot",
+      "Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer",
+      "Lucknow", "Kanpur", "Varanasi", "Prayagraj", "Agra", "Meerut", "Bareilly",
+      "Bhopal", "Indore", "Jabalpur", "Gwalior",
+      "Chandigarh", "Amritsar", "Ludhiana", "Jalandhar",
+      "Bhubaneswar", "Cuttack", "Rourkela", "Puri",
+      "Dehradun", "Haridwar", "Rishikesh", "Shimla", "Srinagar", "Jammu"
     ];
 
     const found = [];
@@ -64,9 +115,9 @@ export function extractDisasterIntent(query = "") {
     }
   }
 
-  // Clean trailing punctuation or prepositions
-  if (origin) origin = origin.replace(/\b(during|during flood|conditions|now|safe|safely)\b/gi, "").trim();
-  if (destination) destination = destination.replace(/\b(during|during flood|conditions|now|safe|safely)\b/gi, "").trim();
+  // Final hygiene pass
+  origin = cleanLocation(origin);
+  destination = cleanLocation(destination);
 
   return {
     origin: origin || null,

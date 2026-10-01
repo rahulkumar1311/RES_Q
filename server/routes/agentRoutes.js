@@ -68,8 +68,14 @@ const handleAgentRun = async (req, res) => {
       demoMode,
     });
 
-    const statusCode = agentResult.success ? 200 : (agentResult.status === "failed" ? 422 : 500);
-    return res.status(statusCode).json(agentResult);
+    if (!agentResult.success && !agentResult.error) {
+      agentResult.error = {
+        code: "AGENT_PLANNING_FAILED",
+        message: agentResult.summary || "Agent could not complete route planning. Please provide origin and destination.",
+      };
+    }
+
+    return res.status(200).json(agentResult);
   } catch (error) {
     console.error("[AGENT-API] Error executing agent request:", error);
     return res.status(500).json({

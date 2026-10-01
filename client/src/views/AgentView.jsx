@@ -47,6 +47,9 @@ export default function AgentView() {
       try {
         const result = await runAgentQuery(trimmed)
         setAgentResult(result)
+        if (!result.success) {
+          setError(result.error?.message || result.summary || 'Agent could not find a verified corridor. Please refine origin or destination.')
+        }
       } catch (err) {
         setError(err.message || 'Agent execution failed. Please check network connectivity and try again.')
       } finally {
