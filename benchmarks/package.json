@@ -1,0 +1,9 @@
+{
+  "name": "resq-benchmarks",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Reproducible AI and Routing Benchmarks for RESQ",
+  "scripts": {
+    "benchmark:ai": "node run_ai_benchmark.js"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "model": "MobileNetV3-Large-Disaster-Hazard",
+  "runtime": "Node.js v24.13.1 (Local On-Device Engine)",
+  "backend": "cpu-fallback",
+  "device": "Windows PC / Field Terminal [Windows_NT 10.0.26200 x64]",
+  "samples": 50,
+  "avg_inference_ms": 0.151,
+  "min_inference_ms": 0.023,
+  "max_inference_ms": 1.673,
+  "model_size_mb": 0.0027,
+  "model_loading_ms": 2.39,
+  "cold_inference_ms": 0.66,
+  "warmup_inference_ms": 0.57,
+  "warmup_samples": 5,
+  "p50_inference_ms": 0.048,
+  "p95_inference_ms": 0.622,
+  "p99_inference_ms": 1.387,
+  "std_dev_ms": 0.298,
+  "precision": "FP32",
+  "memory_usage_mb": {
+    "rss_mb": 51.46,
+    "heap_used_mb": 5.7,
+    "heap_total_mb": 7.82,
+    "heap_delta_mb": 0.35
+  },
+  "hardware": {
+    "processor": "Intel(R) Core(TM) i5-10210U CPU @ 1.60GHz",
+    "architecture": "x64",
+    "cores": 8,
+    "total_memory_gb": 15.8,
+    "has_npu_hardware": false,
+    "qnn_sdk_present": false,
+    "platform": "win32",
+    "os_type": "Windows_NT",
+    "os_release": "10.0.26200"
+  },
+  "machine_type": "development_machine",
+  "is_snapdragon": false,
+  "is_npu_accelerated": false,
+  "timestamp": "2026-09-21T19:29:05.955Z"
+}
