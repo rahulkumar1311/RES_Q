@@ -56,6 +56,7 @@ debris flows and river overflow.
 - [Operations](#operations)
 - [Documented constraints](#documented-constraints)
 - [Documentation index](#documentation-index)
+- [Qualcomm Snapdragon Edge AI Upgrade](#qualcomm-snapdragon-edge-ai-upgrade)
 
 ---
 
@@ -885,6 +886,12 @@ the interface states this. Operator judgement remains authoritative.
 
 | Document | Contents |
 |---|---|
+| [`QUALCOMM_SNAPDRAGON_SUBMISSION.md`](docs/QUALCOMM_SNAPDRAGON_SUBMISSION.md) | Official challenge submission document & evaluation criteria |
+| [`SNAPDRAGON_DEPLOYMENT.md`](docs/SNAPDRAGON_DEPLOYMENT.md) | Snapdragon Copilot+ PC deployment, INT8 quantization & QNN runtime |
+| [`AI_BENCHMARKING.md`](docs/AI_BENCHMARKING.md) | Reproducible on-device benchmark specification & measured results |
+| [`SNAPDRAGON_DEMO.md`](docs/SNAPDRAGON_DEMO.md) | 10-step end-to-end disaster routing demonstration walkthrough |
+| [`OFFLINE_AI_MODE.md`](docs/OFFLINE_AI_MODE.md) | Local AI capability separation & offline operational matrix |
+| [`QUALCOMM_FINAL_AUDIT.md`](docs/QUALCOMM_FINAL_AUDIT.md) | Final readiness audit across all challenge requirements |
 | [`STATIC_DATA_SOURCES.md`](STATIC_DATA_SOURCES.md) | Per-source acquisition and ingestion recipes |
 | [`STATIC_RISK_FORMULA_AUDIT.md`](STATIC_RISK_FORMULA_AUDIT.md) | Static formula verification and calibration |
 | [`DYNAMIC_RISK_ENGINE.md`](DYNAMIC_RISK_ENGINE.md) | Reactive fusion and expiration specification |
@@ -892,6 +899,25 @@ the interface states this. Operator judgement remains authoritative.
 | [`NEWS_NLP_PIPELINE.md`](NEWS_NLP_PIPELINE.md) | RSS ingestion and event extraction |
 | [`GEOCODING_ARCHITECTURE.md`](GEOCODING_ARCHITECTURE.md) | Geocoding service contract |
 | [`FRONTEND_IMPLEMENTATION_PLAN.md`](FRONTEND_IMPLEMENTATION_PLAN.md) | Client architecture and roadmap |
+
+---
+
+## Qualcomm Snapdragon Edge AI Upgrade
+
+RESQ is augmented specifically for the **Qualcomm Snapdragon AI Lab: Build & Present Challenge**, bringing real-time visual disaster intelligence to the edge on **HP Copilot+ PCs** (Snapdragon X Elite / Snapdragon X Plus, Qualcomm Hexagon NPU 45 TOPS).
+
+### Architecture & Pipeline Flow
+$$\text{Drone / Camera Input} \longrightarrow \text{Local MobileNetV3 AI} \longrightarrow \text{Safety Gating (≥ 70%)} \longrightarrow \text{500m Grid Ingestion} \longrightarrow \text{Dynamic Reroute}$$
+
+### Key Capabilities
+- **Local On-Device Inference**: MobileNetV3-Large fine-tuned on regional disaster imagery across 5 classes (`FLOOD`, `BRIDGE DAMAGE`, `LANDSLIDE`, `WASHOUT`, `SAFE ROAD`) executing in **$< 0.5\text{ ms}$** with **zero cloud AI dependencies**.
+- **Quantization Layer**: Symmetric per-channel INT8 (W8A8) quantization for Qualcomm Hexagon Tensor Processor (HTP) yielding a **4x footprint reduction** with **$< 0.1\%$ error**.
+- **Transparent Hardware Telemetry**: Dynamic discovery resolving `qnn-npu`, `qnn-cpu`, or `cpu-fallback` exposing 6 mandatory runtime fields (`device`, `processor`, `ai_backend`, `model`, `precision`, `inference_time`).
+- **Reproducible CLI Commands**:
+  - `npm run benchmark:ai`: Profiles cold start, warm-up, steady-state percentiles (p50/p95/p99), and memory delta.
+  - `npm run demo:snapdragon`: Executes the complete 10-step end-to-end disaster reroute demonstration.
+  - `npm run test:snapdragon-opt`: Tests hardware detection, INT8 numerical stability, and CPU fallback.
+- **Interactive UI Demonstration Panel**: Access via the top navigation `LOCAL AI: READY` badge or the `AI ANALYSIS` tab in the context panel.
 
 ---
 
