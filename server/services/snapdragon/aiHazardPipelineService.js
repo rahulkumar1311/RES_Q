@@ -61,6 +61,31 @@ export function validateAiOutput(aiResult) {
   return { isValid: true };
 }
 
+let lastDbFailureTime = 0;
+const DB_RETRY_INTERVAL_MS = 20000;
+
+function isDbTemporarilyOffline() {
+  return Date.now() - lastDbFailureTime < DB_RETRY_INTERVAL_MS;
+}
+
+function recordDbFailure() {
+  lastDbFailureTime = Date.now();
+}
+
+// Fast execution helper: caps database I/O to timeoutMs so edge AI execution remains lightning-fast
+async function withFastTimeout(promiseFn, timeoutMs = 400) {
+  if (isDbTemporarilyOffline()) {
+    throw new Error("DB_OFFLINE_CIRCUIT_OPEN");
+  }
+  return Promise.race([
+    promiseFn(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error("FAST_IO_TIMEOUT")), timeoutMs)),
+  ]).catch((err) => {
+    recordDbFailure();
+    throw err;
+  });
+}
+
 /**
  * Main AI-Assisted Hazard Interpretation & Routing Integration Pipeline
  * 
@@ -154,7 +179,10 @@ export async function processHazardPipeline({
       } else {
         const bufferMeters = (manualPayload.hazardType || "").toUpperCase() === "FLOOD" ? 12000 : 6000;
         try {
-          affectedCells = await findAffectedGridCells(manualResult.location.latitude, manualResult.location.longitude, bufferMeters, manualResult.location.state);
+          affectedCells = await withFastTimeout(
+            () => findAffectedGridCells(manualResult.location.latitude, manualResult.location.longitude, bufferMeters, manualResult.location.state),
+            800
+          );
         } catch (_) {}
       }
 
@@ -508,50 +536,52 @@ export async function processHazardPipeline({
   // 5.1 Store in disaster.news_events (PostGIS) with clear AI metadata
   let dbEventId = null;
   try {
-    const client = await pool.connect();
-    try {
-      const insertSql = `
-        INSERT INTO disaster.news_events (
-          event_type, hazard_type, severity, confidence, location_text,
-          district, state, latitude, longitude, geom,
-          road_blocked, bridge_damaged, bridge_closed, reported_at, event_status,
-          raw_extraction
-        ) VALUES (
-          $1, $2, $3, $4, $5,
-          $6, $7, $8, $9, ST_SetSRID(ST_MakePoint($9, $8), 4326),
-          $10, $11, $12, NOW(), 'ACTIVE',
-          $13
-        ) RETURNING id;
-      `;
-      const res = await client.query(insertSql, [
-        baseResponse.event_type,
-        baseResponse.hazard_type,
-        baseResponse.severity_score,
-        baseResponse.confidence,
-        baseResponse.location.text,
-        district,
-        state,
-        latitude,
-        longitude,
-        baseResponse.passability.road_blocked,
-        baseResponse.passability.bridge_damaged,
-        baseResponse.passability.bridge_closed,
-        JSON.stringify({
-          source: effectiveSource === "external" ? "external_feed" : "snapdragon_local_ai",
-          source_attribution: effectiveSource,
-          audit_id: auditId,
-          model: baseResponse.model_info,
-          passability: baseResponse.passability,
-        }),
-      ]);
-      if (res.rows.length > 0) {
-        dbEventId = res.rows[0].id;
+    await withFastTimeout(async () => {
+      const client = await pool.connect();
+      try {
+        const insertSql = `
+          INSERT INTO disaster.news_events (
+            event_type, hazard_type, severity, confidence, location_text,
+            district, state, latitude, longitude, geom,
+            road_blocked, bridge_damaged, bridge_closed, reported_at, event_status,
+            raw_extraction
+          ) VALUES (
+            $1, $2, $3, $4, $5,
+            $6, $7, $8, $9, ST_SetSRID(ST_MakePoint($9, $8), 4326),
+            $10, $11, $12, NOW(), 'ACTIVE',
+            $13
+          ) RETURNING id;
+        `;
+        const res = await client.query(insertSql, [
+          baseResponse.event_type,
+          baseResponse.hazard_type,
+          baseResponse.severity_score,
+          baseResponse.confidence,
+          baseResponse.location.text,
+          district,
+          state,
+          latitude,
+          longitude,
+          baseResponse.passability.road_blocked,
+          baseResponse.passability.bridge_damaged,
+          baseResponse.passability.bridge_closed,
+          JSON.stringify({
+            source: effectiveSource === "external" ? "external_feed" : "snapdragon_local_ai",
+            source_attribution: effectiveSource,
+            audit_id: auditId,
+            model: baseResponse.model_info,
+            passability: baseResponse.passability,
+          }),
+        ]);
+        if (res.rows.length > 0) {
+          dbEventId = res.rows[0].id;
+        }
+      } finally {
+        client.release();
       }
-    } finally {
-      client.release();
-    }
+    }, 800);
   } catch (dbErr) {
-    // Database fallback
+    // Database fallback (fast local continuation)
   }
 
   // 5.2 Find Affected 500m Grid Cells (Preserve Existing Hazard Radius Logic)
@@ -564,7 +594,10 @@ export async function processHazardPipeline({
     affectedCells = targetGridIds.map((gid) => ({ grid_id: gid, state, district }));
   } else {
     try {
-      affectedCells = await findAffectedGridCells(latitude, longitude, bufferMeters, state);
+      affectedCells = await withFastTimeout(
+        () => findAffectedGridCells(latitude, longitude, bufferMeters, state),
+        800
+      );
     } catch (gridErr) {
       // Fallback: match nearest regional strategic zone
       const matchedZone = REGIONAL_ZONES.find((z) => z.state.toLowerCase() === state.toLowerCase()) || REGIONAL_ZONES[0];

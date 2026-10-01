@@ -3,9 +3,9 @@
 // and the end-to-end AI -> HAZARD -> ROUTING disaster pipeline using genuine backend values.
 
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Cpu,
-  Shield,
   ShieldAlert,
   ArrowRight,
   X,
@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   Layers,
-  Sparkles,
 } from 'lucide-react'
 import styles from './SnapdragonDemoPanel.module.css'
 
@@ -68,7 +67,6 @@ const DEMO_SCENARIOS = {
 }
 
 export function SnapdragonDemoPanel({ isOpen, onClose }) {
-  const [loading, setLoading] = useState(true)
   const [runningInference, setRunningInference] = useState(false)
   const [selectedScenarioKey, setSelectedScenarioKey] = useState('FLOOD')
 
@@ -80,7 +78,6 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
   // 1. Fetch Real AI System Status from /api/ai/status
   const fetchStatus = useCallback(async () => {
     try {
-      setLoading(true)
       const res = await fetch('/api/ai/status')
       if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to reach AI status endpoint`)
       const json = await res.json()
@@ -96,8 +93,6 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
         model: 'MobileNetV3-Large-Disaster-Hazard',
         device: 'Host Machine (Disconnected)',
       })
-    } finally {
-      setLoading(false)
     }
   }, [])
 
@@ -145,11 +140,22 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
     }
   }, [isOpen, fetchStatus, runRealInference])
 
-  if (!isOpen) return null
+  // Escape key handler to close panel
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose?.()
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isOpen, onClose])
+
+  if (!isOpen || typeof document === 'undefined') return null
 
   // Resolve Real Backend Values (strictly non-fabricated)
   const isLocalReady = systemStatus?.isReady ?? true
-  const aiStatusLabel = isLocalReady ? 'LOCAL' : 'UNAVAILABLE'
   const actualModel = pipelineData?.model || systemStatus?.model || systemStatus?.modelName || 'MobileNetV3-Large-Disaster-Hazard'
   const actualBackend = pipelineData?.ai_backend || systemStatus?.ai_backend || systemStatus?.executionProvider || 'cpu-fallback'
   const actualDevice = pipelineData?.device || systemStatus?.device || 'Windows PC / Field Terminal'
@@ -178,13 +184,8 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
     Boolean(pipelineData?.passability?.bridge_damaged)
 
   const isLowConfidenceReview = pipelineData?.route_decision === 'FLAGGED_FOR_REVIEW_NO_REROUTE'
-  const routingStatusLabel = isLowConfidenceReview
-    ? 'SAFE ROUTE (LOW CONFIDENCE VETO)'
-    : isRerouteRequired
-    ? 'REROUTING REQUIRED'
-    : 'SAFE ROUTE'
 
-  return (
+  return createPortal(
     <div className={styles.backdrop} onClick={onClose} role="dialog" aria-modal="true">
       <div className={styles.panel} onClick={(e) => e.stopPropagation()}>
         {/* Header */}
@@ -203,8 +204,9 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
             className={styles.closeBtn}
             onClick={onClose}
             aria-label="Close panel"
+            title="Close panel (Esc)"
           >
-            <X size={18} />
+            <X size={20} />
           </button>
         </div>
 
@@ -520,16 +522,28 @@ export function SnapdragonDemoPanel({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* Footer Integrity Confirmation */}
+        {/* Footer Integrity Confirmation & Cut/Close Button */}
         <div className={styles.footerNotice}>
-          <span>
-            <CheckCircle2 size={13} color="#059669" />
-            Live data from <code>/api/ai/status</code> and <code>/api/ai/pipeline</code>
-          </span>
-          <span>Zero cloud AI API dependency · Non-fabricated telemetry</span>
+          <div className={styles.footerNoticeLeft}>
+            <span>
+              <CheckCircle2 size={13} color="#059669" />
+              Live data from <code>/api/ai/status</code> and <code>/api/ai/pipeline</code>
+            </span>
+            <span>Zero cloud AI API dependency · Non-fabricated telemetry</span>
+          </div>
+          <button
+            type="button"
+            className={styles.footerCloseBtn}
+            onClick={onClose}
+            title="Close modal (Esc)"
+          >
+            <X size={15} />
+            <span>Close</span>
+          </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
