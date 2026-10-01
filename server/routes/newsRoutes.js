@@ -271,9 +271,11 @@ router.get("/items", async (req, res) => {
 router.get("/events/active", async (req, res) => {
   try {
     const events = await getActiveDisasterEvents();
-    res.json({ success: true, count: events.length, events });
+    res.json({ success: true, count: events.length, events, data: events });
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+    const { getAllActiveDisasterEvents } = await import("../services/risk/regionalIntelligenceStore.js");
+    const events = getAllActiveDisasterEvents();
+    res.json({ success: true, count: events.length, events, data: events });
   }
 });
 

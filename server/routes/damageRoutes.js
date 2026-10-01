@@ -1,10 +1,24 @@
-// Damage Reporting & Relief Mission Routes for RESQ
 import express from "express";
 import pool from "../config/db.js";
 import { authenticate, authorize } from "../middleware/authMiddleware.js";
 import { ROLES } from "../models/userModel.js";
+import { classifyHazard } from "../services/snapdragon/snapdragonVisionService.js";
 
 const router = express.Router();
+
+// POST /api/damage/analyze-hazard - On-device AI hazard image analysis
+router.post("/analyze-hazard", (req, res) => {
+  try {
+    const { image, features, location } = req.body || {};
+    if (!image && !features) {
+      return res.status(400).json({ success: false, error: "Image or features required for analysis" });
+    }
+    const result = classifyHazard(features ? { features } : image, location);
+    res.status(200).json({ success: !result.fallback, data: result });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
 
 // Fallback in-memory store for missions & reports if DB offline
 const activeDamageReports = [

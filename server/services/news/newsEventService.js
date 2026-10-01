@@ -264,8 +264,13 @@ export const getActiveDisasterEvents = async () => {
     GROUP BY e.id, i.title, i.url, s.name, s.reliability_tier
     ORDER BY e.reported_at DESC;
   `;
-  const res = await pool.query(query);
-  return res.rows;
+  try {
+    const res = await pool.query(query);
+    return res.rows;
+  } catch (err) {
+    const { getAllActiveDisasterEvents } = await import("../risk/regionalIntelligenceStore.js");
+    return getAllActiveDisasterEvents();
+  }
 };
 
 // Retrieves a single disaster event by ID with all linked 500m grid cell IDs

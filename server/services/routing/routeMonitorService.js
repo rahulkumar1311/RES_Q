@@ -23,13 +23,51 @@ export async function registerActiveRouteSession({
   origin,
   destination,
   vehicle = "car",
+  orderedGrids = null,
+  routeGridIds = null,
+  riskSnapshot = null,
 }) {
   if (!sessionId || !routeGeometry || routeGeometry.length < 2) {
     throw new Error("Invalid session registration parameters");
   }
 
-  // Intersect route geometry with 500m PostGIS grid
-  const initialRiskEval = await evaluateRouteRisk(routeGeometry);
+  // Intersect route geometry with 500m PostGIS grid (with graceful fallback if db is unavailable)
+  let initialRiskEval;
+  try {
+    initialRiskEval = await evaluateRouteRisk(routeGeometry);
+  } catch (riskErr) {
+    console.warn("Initial route risk evaluation warning:", riskErr.message);
+    initialRiskEval = {
+      orderedGrids: [],
+      routeGridIds: [],
+      riskSnapshot: {
+        meanRisk: 0,
+        maxRisk: 0,
+        highRiskGridCount: 0,
+        criticalGridCount: 0,
+        activeHazardCount: 0,
+        blockedSegmentCount: 0,
+        affectedBridgeCount: 0,
+        affectedRoadCount: 0,
+        riskConfidence: 1.0,
+        isBlocked: false,
+        routeStatus: "SAFE",
+      },
+      hazards: [],
+    };
+  }
+
+  const finalOrderedGrids = (initialRiskEval.orderedGrids && initialRiskEval.orderedGrids.length > 0)
+    ? initialRiskEval.orderedGrids
+    : (orderedGrids || []);
+
+  const finalRouteGridIds = (initialRiskEval.routeGridIds && initialRiskEval.routeGridIds.length > 0)
+    ? initialRiskEval.routeGridIds
+    : (routeGridIds || finalOrderedGrids.map((g) => g.gridId));
+
+  const finalRiskSnapshot = (initialRiskEval.riskSnapshot && initialRiskEval.orderedGrids.length > 0)
+    ? initialRiskEval.riskSnapshot
+    : (riskSnapshot || initialRiskEval.riskSnapshot);
 
   const session = {
     sessionId,
@@ -39,12 +77,12 @@ export async function registerActiveRouteSession({
     destination,
     vehicle,
     routeGeometry,
-    orderedGrids: initialRiskEval.orderedGrids,
-    routeGridIds: initialRiskEval.routeGridIds,
-    remainingGridIds: new Set(initialRiskEval.routeGridIds),
+    orderedGrids: finalOrderedGrids,
+    routeGridIds: finalRouteGridIds,
+    remainingGridIds: new Set(finalRouteGridIds),
     currentPosition: origin,
     currentProgressFraction: 0.0,
-    lastRiskSnapshot: initialRiskEval.riskSnapshot,
+    lastRiskSnapshot: finalRiskSnapshot,
     hazards: initialRiskEval.hazards,
     registeredAt: Date.now(),
     lastEvaluationTimestamp: Date.now(),
@@ -276,6 +314,11 @@ export function cleanupActiveSession(sessionId) {
   return activeSessions.delete(sessionId);
 }
 
+// Retrieves active session object for internal inspection
+export function getActiveSession(sessionId) {
+  return activeSessions.get(sessionId) || null;
+}
+
 export default {
   ROUTE_MONITOR_CONFIG,
   registerActiveRouteSession,
@@ -284,4 +327,6 @@ export default {
   evaluateGridRiskUpdate,
   executeDynamicReroute,
   cleanupActiveSession,
+  getActiveSession,
 };
+

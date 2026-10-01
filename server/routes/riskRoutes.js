@@ -5,6 +5,10 @@ import {
   recomputeGridsFromActiveEvents,
   expireStaleEvents,
 } from "../services/risk/dynamicRiskService.js";
+import {
+  resolveLocationRisk,
+  getGridRiskById,
+} from "../services/risk/regionalIntelligenceStore.js";
 
 const router = express.Router();
 
@@ -12,46 +16,62 @@ const router = express.Router();
 router.get("/point", async (req, res) => {
   try {
     const lat = parseFloat(req.query.lat);
-    const lon = parseFloat(req.query.lon);
+    const lon = parseFloat(req.query.lon !== undefined ? req.query.lon : req.query.lng);
 
     if (isNaN(lat) || isNaN(lon)) {
       return res.status(400).json({
         success: false,
-        error: "Valid numeric 'lat' and 'lon' query parameters are required.",
+        error: "Valid numeric 'lat' and 'lon' (or 'lng') query parameters are required.",
       });
     }
 
     // 1. Spatial point lookup using PostGIS ST_Contains (Assam first, then Meghalaya)
     let cell = null;
-    const client = await (await import("../config/db.js")).default.connect();
-
     try {
-      const asRes = await client.query(
-        `SELECT grid_id, state, district, block, center_lat, center_lon,
-                ST_AsGeoJSON(geom)::json AS geometry
-         FROM grid_500m.assam
-         WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
-         LIMIT 1;`,
-        [lon, lat]
-      );
-
-      if (asRes.rows.length > 0) {
-        cell = asRes.rows[0];
-      } else {
-        const mlRes = await client.query(
+      const client = await (await import("../config/db.js")).default.connect();
+      try {
+        const asRes = await client.query(
           `SELECT grid_id, state, district, block, center_lat, center_lon,
                   ST_AsGeoJSON(geom)::json AS geometry
-           FROM grid_500m.meghalaya
+           FROM grid_500m.assam
            WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
            LIMIT 1;`,
           [lon, lat]
         );
-        if (mlRes.rows.length > 0) {
-          cell = mlRes.rows[0];
+
+        if (asRes.rows.length > 0) {
+          cell = asRes.rows[0];
+        } else {
+          const mlRes = await client.query(
+            `SELECT grid_id, state, district, block, center_lat, center_lon,
+                    ST_AsGeoJSON(geom)::json AS geometry
+             FROM grid_500m.meghalaya
+             WHERE ST_Contains(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326))
+             LIMIT 1;`,
+            [lon, lat]
+          );
+          if (mlRes.rows.length > 0) {
+            cell = mlRes.rows[0];
+          }
         }
+      } finally {
+        client.release();
       }
-    } finally {
-      client.release();
+    } catch (dbErr) {
+      // Database connection fallback to verified regional intelligence store
+      const fallback = resolveLocationRisk(lat, lon);
+      if (!fallback || fallback.inCoverage === false) {
+        return res.status(404).json({
+          success: false,
+          inCoverage: false,
+          message: fallback?.message || "Location is outside RESQ operational coverage area (Assam & Meghalaya).",
+        });
+      }
+      return res.status(200).json({
+        success: true,
+        inCoverage: true,
+        data: fallback,
+      });
     }
 
     if (!cell) {
@@ -76,6 +96,10 @@ router.get("/point", async (req, res) => {
     });
   } catch (error) {
     console.error("Point risk lookup error:", error.message);
+    const fallback = resolveLocationRisk(parseFloat(req.query.lat), parseFloat(req.query.lon));
+    if (fallback && fallback.inCoverage !== false) {
+      return res.status(200).json({ success: true, inCoverage: true, data: fallback });
+    }
     return res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -84,7 +108,16 @@ router.get("/point", async (req, res) => {
 router.get("/grid/:gridId", async (req, res) => {
   try {
     const { gridId } = req.params;
-    const breakdown = await getDynamicRiskBreakdown(gridId);
+    let breakdown = null;
+    try {
+      breakdown = await getDynamicRiskBreakdown(gridId);
+    } catch (dbErr) {
+      breakdown = getGridRiskById(gridId);
+    }
+
+    if (!breakdown) {
+      breakdown = getGridRiskById(gridId);
+    }
 
     if (!breakdown) {
       return res.status(404).json({
@@ -98,6 +131,10 @@ router.get("/grid/:gridId", async (req, res) => {
       data: breakdown,
     });
   } catch (error) {
+    const fallback = getGridRiskById(req.params.gridId);
+    if (fallback) {
+      return res.json({ success: true, data: fallback });
+    }
     res.status(500).json({ success: false, error: error.message });
   }
 });
