@@ -1,0 +1,67 @@
+{
+  "version": "v1.0",
+  "model_target": "MobileNetV3-Large-Disaster-Hazard",
+  "qualcomm_ai_hub_id": "qai_hub_models.models.mobilenet_v3_large",
+  "classes": [
+    {
+      "id": "FLOOD_WATER_SUBMERGENCE",
+      "displayName": "Flood Water Submergence",
+      "hazardType": "FLOOD",
+      "eventType": "ROAD_FLOODING",
+      "defaultSeverity": 85.0,
+      "roadBlocked": true,
+      "bridgeClosed": false,
+      "bridgeDamaged": false,
+      "bufferMeters": 12000,
+      "description": "Roadway submerged by standing or surging flood waters. Water depth exceeds safe convoy axle clearance."
+    },
+    {
+      "id": "BRIDGE_STRUCTURAL_DAMAGE",
+      "displayName": "Bridge Structural Damage / Scour",
+      "hazardType": "STRUCTURAL",
+      "eventType": "BRIDGE_COLLAPSE",
+      "defaultSeverity": 95.0,
+      "roadBlocked": true,
+      "bridgeClosed": true,
+      "bridgeDamaged": true,
+      "bufferMeters": 6000,
+      "description": "Critical bridge structural failure, pier scour erosion, or collapsed span. Immediate hard closure veto."
+    },
+    {
+      "id": "LANDSLIDE_DEBRIS_COLLAPSE",
+      "displayName": "Landslide / Debris Obstruction",
+      "hazardType": "LANDSLIDE",
+      "eventType": "ROAD_BLOCKAGE",
+      "defaultSeverity": 85.0,
+      "roadBlocked": true,
+      "bridgeClosed": false,
+      "bridgeDamaged": false,
+      "bufferMeters": 5000,
+      "description": "Hillside debris flow, mud accumulation, or rockfall covering highway carriageway."
+    },
+    {
+      "id": "ROAD_SURFACE_WASHOUT",
+      "displayName": "Road Surface Washout / Embankment Collapse",
+      "hazardType": "INFRASTRUCTURE",
+      "eventType": "ROAD_COLLAPSE",
+      "defaultSeverity": 90.0,
+      "roadBlocked": true,
+      "bridgeClosed": false,
+      "bridgeDamaged": false,
+      "bufferMeters": 6000,
+      "description": "Roadbed eroded by river current or gully cut. Total loss of drivable pavement width."
+    },
+    {
+      "id": "CLEAR_NORMAL_ROAD",
+      "displayName": "Clear Open Roadway",
+      "hazardType": "NONE",
+      "eventType": "ROAD_CLEAR",
+      "defaultSeverity": 0.0,
+      "roadBlocked": false,
+      "bridgeClosed": false,
+      "bridgeDamaged": false,
+      "bufferMeters": 0,
+      "description": "Road surface intact, dry, and free of physical obstructions. Normal convoy transit allowed."
+    }
+  ]
+}

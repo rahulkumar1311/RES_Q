@@ -16,6 +16,8 @@ import { initializeSessionSchema } from "./models/resqSessionModel.js";
 import { startNewsScheduler } from "./services/news/newsSchedulerService.js";
 import { initSocketServer } from "./services/socketService.js";
 
+import snapdragonAiRoutes from "./routes/snapdragonAiRoutes.js";
+
 dotenv.config();
 
 const app = express();
@@ -34,6 +36,7 @@ app.get("/", (req, res) => {
 });
 
 // API Routes
+app.use("/api/ai", snapdragonAiRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/damage", damageRoutes);
 app.use("/api/resq/session", resqSessionRoutes);
