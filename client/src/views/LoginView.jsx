@@ -16,11 +16,13 @@ import {
   User,
   Radio,
   Check,
+  X,
 } from 'lucide-react'
 import { useAuth } from '../app/authContext.jsx'
+import resqLogo from '../assets/resq-logo.png'
 import styles from './LoginView.module.css'
 
-export function LoginView({ initialMode = 'login' }) {
+export function LoginView({ initialMode = 'login', onClose }) {
   const { login, register } = useAuth()
 
   // Mode: 'login' | 'register' | 'forgot' | 'reset'
@@ -327,9 +329,9 @@ export function LoginView({ initialMode = 'login' }) {
 
   // Demo auto-fill helper for hackathon evaluators with instant 1-click login
   const handleDemoFill = async (roleType) => {
-    let targetEmail = 'admin@resq.demo'
+    let targetEmail = 'operator@resq.demo'
     if (roleType === 'operator') targetEmail = 'operator@resq.demo'
-    else if (roleType === 'viewer') targetEmail = 'viewer@resq.demo'
+    else if (roleType === 'viewer') targetEmail = 'operator@resq.demo'
 
     setIdentifier(targetEmail)
     setPassword('Resq@2026!')
@@ -353,9 +355,9 @@ export function LoginView({ initialMode = 'login' }) {
         <div className={styles.topBranding}>
           <div className={styles.brandLogoRow}>
             <img
-              src="/logo.png"
+              src={resqLogo}
               alt="resQ Logo"
-              style={{ height: '62px', width: 'auto', objectFit: 'contain' }}
+              style={{ height: '62px', width: 'auto', objectFit: 'contain', mixBlendMode: 'multiply' }}
             />
           </div>
           <div className={styles.brandBadge}>
@@ -368,7 +370,40 @@ export function LoginView({ initialMode = 'login' }) {
         </div>
 
         {/* Centered Authentication Card */}
-        <div className={styles.authCard}>
+        <div className={styles.authCard} style={{ position: 'relative' }}>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close authentication modal"
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#64748b',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '6px',
+                borderRadius: '8px',
+                transition: 'all 0.15s ease',
+                zIndex: 10,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#0f172a'
+                e.currentTarget.style.background = '#f1f5f9'
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#64748b'
+                e.currentTarget.style.background = 'transparent'
+              }}
+            >
+              <X size={20} />
+            </button>
+          )}
           {/* ================= MODE: LOGIN ================= */}
           {mode === 'login' && (
             <>

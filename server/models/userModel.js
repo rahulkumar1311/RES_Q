@@ -24,25 +24,6 @@ const DEMO_HASH = bcrypt.hashSync(DEMO_PASSWORD, DEMO_SALT);
 
 const fallbackUsersStore = new Map([
   [
-    "admin@resq.demo",
-    {
-      id: "usr_admin_001",
-      name: "Prince",
-      fullName: "Prince",
-      email: "admin@resq.demo",
-      mobile: "+91 98765 00001",
-      username: "prince",
-      profile_photo: null,
-      password_hash: DEMO_HASH,
-      role: ROLES.ADMIN,
-      status: USER_STATUS.ACTIVE,
-      department: "State Disaster Command & Control",
-      last_login_at: new Date(Date.now() - 3600000).toISOString(),
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ],
-  [
     "operator@resq.demo",
     {
       id: "usr_operator_002",
@@ -53,10 +34,29 @@ const fallbackUsersStore = new Map([
       username: "rahul",
       profile_photo: null,
       password_hash: DEMO_HASH,
-      role: ROLES.OPERATOR,
+      role: ROLES.ADMIN,
       status: USER_STATUS.ACTIVE,
-      department: "Field Logistics & Convoy Operations",
-      last_login_at: new Date(Date.now() - 7200000).toISOString(),
+      department: "State Disaster Command & Control & Logistics",
+      last_login_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ],
+  [
+    "admin@resq.demo",
+    {
+      id: "usr_admin_001",
+      name: "Prince",
+      fullName: "Prince",
+      email: "admin@resq.demo",
+      mobile: "+91 98765 00001",
+      username: "prince",
+      profile_photo: null,
+      password_hash: DEMO_HASH,
+      role: ROLES.VIEWER,
+      status: USER_STATUS.DISABLED,
+      department: "State Disaster Command & Control",
+      last_login_at: new Date(Date.now() - 3600000).toISOString(),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -73,7 +73,7 @@ const fallbackUsersStore = new Map([
       profile_photo: null,
       password_hash: DEMO_HASH,
       role: ROLES.VIEWER,
-      status: USER_STATUS.ACTIVE,
+      status: USER_STATUS.DISABLED,
       department: "Regional Disaster Research & Analytics",
       last_login_at: new Date(Date.now() - 86400000).toISOString(),
       created_at: new Date().toISOString(),
@@ -125,6 +125,8 @@ export async function initializeUserSchema() {
            ON CONFLICT (email) DO UPDATE SET
              name = EXCLUDED.name,
              username = EXCLUDED.username,
+             role = EXCLUDED.role,
+             status = EXCLUDED.status,
              mobile = COALESCE(public.resq_users.mobile, EXCLUDED.mobile),
              department = EXCLUDED.department;`,
           [
@@ -442,6 +444,24 @@ export async function listAllUsers() {
 
 export const getAllUsers = listAllUsers;
 
+export async function deleteUser(userId) {
+  if (isDbAvailable) {
+    try {
+      await pool.query("DELETE FROM public.resq_users WHERE id = $1;", [userId]);
+    } catch (err) {
+      console.warn("DB deleteUser failed:", err.message);
+    }
+  }
+
+  for (const [email, user] of fallbackUsersStore.entries()) {
+    if (user.id === userId) {
+      fallbackUsersStore.delete(email);
+      return true;
+    }
+  }
+  return false;
+}
+
 export async function createPasswordResetToken(identifier) {
   const user = await findUserByIdentifier(identifier);
   if (!user) return null;
@@ -485,6 +505,7 @@ export default {
   updateLastLogin,
   listAllUsers,
   getAllUsers,
+  deleteUser,
   createPasswordResetToken,
   resetUserPasswordWithToken,
   verifyPassword,

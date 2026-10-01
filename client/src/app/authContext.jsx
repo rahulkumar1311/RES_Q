@@ -160,11 +160,11 @@ export function AuthProvider({ children }) {
   const switchDemoRole = useCallback(
     async (roleName) => {
       const emailMap = {
-        ADMIN: 'admin@resq.demo',
+        ADMIN: 'operator@resq.demo',
         OPERATOR: 'operator@resq.demo',
-        VIEWER: 'viewer@resq.demo',
+        VIEWER: 'operator@resq.demo',
       }
-      const targetEmail = emailMap[roleName] || 'admin@resq.demo'
+      const targetEmail = emailMap[roleName] || 'operator@resq.demo'
       return login(targetEmail, 'Resq@2026!', true)
     },
     [login]

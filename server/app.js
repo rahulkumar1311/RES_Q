@@ -17,6 +17,7 @@ import { startNewsScheduler } from "./services/news/newsSchedulerService.js";
 import { initSocketServer } from "./services/socketService.js";
 
 import snapdragonAiRoutes from "./routes/snapdragonAiRoutes.js";
+import agentRoutes from "./routes/agentRoutes.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 
 // API Routes
 app.use("/api/ai", snapdragonAiRoutes);
+app.use("/api/agent", agentRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/damage", damageRoutes);
 app.use("/api/resq/session", resqSessionRoutes);

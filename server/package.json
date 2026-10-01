@@ -20,6 +20,7 @@
     "test:ai-reroute": "node test/aiRerouteIntegration.test.js",
     "test:offline-ai": "node test/offlineAiMode.test.js",
     "test:snapdragon-opt": "node test/snapdragonOptimization.test.js",
+    "test:agent": "node test/agentService.test.js",
     "benchmark:ai": "node ../benchmarks/run_ai_benchmark.js",
     "demo:snapdragon": "node scripts/run_snapdragon_demo.js",
     "dev": "nodemon app.js",

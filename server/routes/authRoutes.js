@@ -9,6 +9,7 @@ import {
   findUserByIdentifier,
   isUsernameAvailable,
   getAllUsers,
+  deleteUser,
   updateUserRole,
   updateUserStatus,
   updateLastLogin,
@@ -595,6 +596,33 @@ router.patch("/users/:id/status", authenticate, authorize(ROLES.ADMIN), async (r
   } catch (err) {
     console.error("Update status error:", err.message);
     res.status(500).json({ success: false, error: "Failed to update user status." });
+  }
+});
+
+// DELETE /api/auth/users/:id - Permanently remove user access (ADMIN only)
+router.delete("/users/:id", authenticate, authorize(ROLES.ADMIN), async (req, res) => {
+  try {
+    if (req.params.id === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        error: "You cannot delete your own administrator account.",
+      });
+    }
+
+    const targetUser = await findUserById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: "User not found." });
+    }
+
+    await deleteUser(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: `User ${targetUser.name} access permanently removed.`,
+    });
+  } catch (err) {
+    console.error("Delete user error:", err.message);
+    res.status(500).json({ success: false, error: "Failed to remove user access." });
   }
 });
 
