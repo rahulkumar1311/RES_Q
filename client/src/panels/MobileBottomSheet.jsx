@@ -17,7 +17,7 @@ export function MobileBottomSheet({
   const riskScore = hasSummary && riskData.riskSummary.riskScore != null ? parseFloat(riskData.riskSummary.riskScore) : null
   const riskStatus = hasSummary && riskData.riskSummary.riskStatus ? riskData.riskSummary.riskStatus : 'LOW'
   const placeTitle = selectedLocation?.name || (riskData?.gridId ? `Grid ${riskData.gridId}` : 'Selected Area')
-  const placeDistrict = selectedLocation?.district || riskData?.district || 'Assam / Meghalaya'
+  const placeDistrict = selectedLocation?.district || riskData?.district || 'Pan-India Disaster Grid'
 
   let statusTone = 'neutral'
   if (riskStatus === 'CRITICAL') statusTone = 'critical'

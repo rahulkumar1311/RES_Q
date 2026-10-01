@@ -250,7 +250,7 @@ export function ResqNavigationOverlay({ onRecenter }) {
             <button
               type="button"
               className={styles.actionBtn}
-              onClick={toggleStepsDrawer}
+              onClick={() => toggleStepsDrawer()}
               aria-label="View turn steps"
             >
               <List size={16} />
@@ -272,14 +272,14 @@ export function ResqNavigationOverlay({ onRecenter }) {
 
       {/* 4. TURN-BY-TURN STEPS DRAWER */}
       {isStepsDrawerOpen && (
-        <div className={styles.drawerOverlay} onClick={toggleStepsDrawer}>
+        <div className={styles.drawerOverlay} onClick={() => toggleStepsDrawer(false)}>
           <div className={styles.drawerCard} onClick={(e) => e.stopPropagation()}>
             <div className={styles.drawerHeader}>
               <div className={styles.drawerTitle}>Turn-by-Turn Route Steps</div>
               <button
                 type="button"
                 className={styles.drawerCloseBtn}
-                onClick={toggleStepsDrawer}
+                onClick={() => toggleStepsDrawer(false)}
                 aria-label="Close steps"
               >
                 <X size={18} />

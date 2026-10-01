@@ -79,6 +79,39 @@ export async function getActiveDisasterEvents() {
   }
 }
 
+// Executes autonomous disaster response agent workflow
+export async function runAgentQuery(query, options = {}) {
+  if (!query || !query.trim()) {
+    throw new Error('Query string is required')
+  }
+  const res = await fetch(`${API_BASE}/agent/run`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: query.trim(),
+      ...options,
+    }),
+  })
+  const json = await res.json()
+  if (!res.ok) {
+    throw new Error(json.error?.message || json.message || `Agent execution failed with status ${res.status}`)
+  }
+  return json
+}
+
+// Retrieves registered agent tools and schemas
+export async function getAgentTools() {
+  try {
+    const res = await fetch(`${API_BASE}/agent/tools`)
+    if (!res.ok) throw new Error(`Agent tools query failed with status ${res.status}`)
+    const json = await res.json()
+    return json.tools || []
+  } catch (err) {
+    console.error('Agent tools query error:', err.message)
+    return []
+  }
+}
+
 // Re-export routing services
 export { getRoute, checkRoutingHealth } from './routingApi.js'
 
@@ -88,4 +121,6 @@ export default {
   getGridRiskBreakdown,
   getViewportGrids,
   getActiveDisasterEvents,
+  runAgentQuery,
+  getAgentTools,
 }

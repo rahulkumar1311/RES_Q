@@ -247,6 +247,20 @@ export function DamageReportModal({ isOpen, onClose, onSubmitted }) {
                     >
                       <option value="Assam">Assam</option>
                       <option value="Meghalaya">Meghalaya</option>
+                      <option value="Delhi">Delhi NCR</option>
+                      <option value="Maharashtra">Maharashtra</option>
+                      <option value="Karnataka">Karnataka</option>
+                      <option value="West Bengal">West Bengal</option>
+                      <option value="Kerala">Kerala</option>
+                      <option value="Uttarakhand">Uttarakhand</option>
+                      <option value="Bihar">Bihar</option>
+                      <option value="Odisha">Odisha</option>
+                      <option value="Himachal Pradesh">Himachal Pradesh</option>
+                      <option value="Tamil Nadu">Tamil Nadu</option>
+                      <option value="Telangana">Telangana</option>
+                      <option value="Gujarat">Gujarat</option>
+                      <option value="Uttar Pradesh">Uttar Pradesh</option>
+                      <option value="Rajasthan">Rajasthan</option>
                     </select>
                   </div>
                 </div>

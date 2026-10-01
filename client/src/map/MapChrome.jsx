@@ -1,7 +1,7 @@
 // MapChrome floating UI controls and overlays for RESQ Operations Map
 
 import { useState } from 'react'
-import { Crosshair, Minus, Plus, Compass, Maximize2, Minimize2, Box, Info } from 'lucide-react'
+import { Crosshair, Minus, Plus, Compass, Maximize2, Minimize2, Box } from 'lucide-react'
 import { Tooltip } from '../ui/index.js'
 import { formatCoord } from '../lib/format.js'
 import { metersPerPixel } from './projection.js'
@@ -153,18 +153,6 @@ export function MapChrome({
 
   return (
     <div className={styles.chromeOverlay}>
-      {/* Top-left floating attribution stack (without Risk Index) */}
-      <div className={styles.topLeftStack}>
-        <div className={styles.topLeftPill}>
-          <Info size={14} className={styles.pillIcon} />
-          <span className={styles.pillBold}>RESQ MAP</span>
-          <span className={styles.pillSep}>•</span>
-          <span className={styles.pillText}>Assam &amp; Meghalaya</span>
-          <span className={styles.pillSep}>•</span>
-          <span className={styles.pillText}>408K Grid Cells</span>
-        </div>
-      </div>
-
       {/* Right vertical controls stack */}
       <div className={styles.rightRail}>
         <VerticalControls onLocateMe={onLocateMe} onToggle3D={handleToggle3D} is3D={is3D} />

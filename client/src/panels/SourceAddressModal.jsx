@@ -275,7 +275,7 @@ export function SourceAddressModal({
                 {isSearching && (
                   <div className={styles.searchingState}>
                     <Loader2 size={18} className={styles.spinner} />
-                    <span>Searching places in Assam & Meghalaya...</span>
+                    <span>Searching places across India...</span>
                   </div>
                 )}
 
@@ -294,7 +294,7 @@ export function SourceAddressModal({
                       <div className={styles.resultDetails}>
                         <span className={styles.resultTitle}>{item.name}</span>
                         <span className={styles.resultSubtitle}>
-                          {item.displayName || `${item.district || 'Assam'}, ${item.state || 'India'}`}
+                          {item.displayName || `${item.district || 'India'}, ${item.state || 'India'}`}
                         </span>
                       </div>
                     </button>
@@ -304,19 +304,21 @@ export function SourceAddressModal({
                 {!isSearching && searchQuery.trim().length >= 2 && searchResults.length === 0 && (
                   <div className={styles.emptyResults}>
                     <p>No matching locations found for "{searchQuery}".</p>
-                    <p className={styles.emptyHint}>Try searching Guwahati, Shillong, Boko, or Dispur.</p>
+                    <p className={styles.emptyHint}>Try searching Delhi, Mumbai, Bengaluru, Kolkata, Guwahati, or Shillong.</p>
                   </div>
                 )}
 
                 {!isSearching && !searchQuery && (
                   <div className={styles.quickSuggestions}>
-                    <span className={styles.quickLabel}>Popular Starting Points:</span>
+                    <span className={styles.quickLabel}>Popular Pan-India Starting Points:</span>
                     <div className={styles.quickList}>
                       {[
                         { name: 'Guwahati Emergency Depot', lat: 26.1445, lon: 91.7362, district: 'Kamrup Metro', state: 'Assam' },
-                        { name: 'Shillong Transport Hub', lat: 25.5788, lon: 91.8933, district: 'East Khasi Hills', state: 'Meghalaya' },
-                        { name: 'Dispur Secretariat', lat: 26.1445, lon: 91.7898, district: 'Kamrup Metro', state: 'Assam' },
-                        { name: 'Nongpoh Station', lat: 25.9038, lon: 91.8805, district: 'Ri-Bhoi', state: 'Meghalaya' },
+                        { name: 'National Disaster Command Hub', lat: 28.6139, lon: 77.2090, district: 'New Delhi', state: 'Delhi NCR' },
+                        { name: 'Mumbai Western Emergency Depot', lat: 19.0760, lon: 72.8777, district: 'Mumbai Suburban', state: 'Maharashtra' },
+                        { name: 'Bengaluru Logistics Center', lat: 12.9716, lon: 77.5946, district: 'Bengaluru Urban', state: 'Karnataka' },
+                        { name: 'Kolkata Port Relief Depot', lat: 22.5726, lon: 88.3639, district: 'Kolkata', state: 'West Bengal' },
+                        { name: 'Shillong Mountain Outpost', lat: 25.5788, lon: 91.8933, district: 'East Khasi Hills', state: 'Meghalaya' },
                       ].map((item) => (
                         <button
                           key={item.name}

@@ -395,7 +395,7 @@ export function recenterCamera() {
 export function toggleStepsDrawer(forceOpen) {
   state = {
     ...state,
-    isStepsDrawerOpen: forceOpen !== undefined ? forceOpen : !state.isStepsDrawerOpen,
+    isStepsDrawerOpen: typeof forceOpen === "boolean" ? forceOpen : !state.isStepsDrawerOpen,
   };
   emitChange();
 }

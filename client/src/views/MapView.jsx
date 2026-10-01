@@ -17,6 +17,7 @@ import {
   GEOLOCATION_STATE,
 } from '../services/locationApi.js'
 import { getCurrentGridRisk, getGridRisk } from '../services/riskApi.js'
+import { ALL_CITIES } from '../services/citiesCatalog.js'
 import { useRouteStore } from '../services/routeStore.js'
 import styles from './MapView.module.css'
 
@@ -82,7 +83,7 @@ export default function MapView() {
 
       const placeName = reverseInfo?.name || (pointRisk?.district ? `${pointRisk.district}` : 'Your Location')
       const districtName = reverseInfo?.district || pointRisk?.district || 'Kamrup Metropolitan'
-      const stateName = reverseInfo?.state || pointRisk?.state || 'Assam'
+      const stateName = reverseInfo?.state || pointRisk?.state || 'India'
 
       const userLoc = {
         name: placeName,
@@ -99,27 +100,23 @@ export default function MapView() {
 
       handleSelectLocation(userLoc)
 
-      if (pointRisk && pointRisk.inCoverage) {
+      if (pointRisk) {
         setSelectedGridId(pointRisk.gridId)
         setSelectedGridGeometry(pointRisk.geometry)
         setRiskData(pointRisk)
-      } else {
-        setSelectedGridId(null)
-        setSelectedGridGeometry(null)
-        setRiskData(null)
-        setGeoError('Location is outside RESQ operational coverage (Assam & Meghalaya).')
       }
     } catch (err) {
       setGeoState(err.state || GEOLOCATION_STATE.ERROR)
       setGeoError(err.message || 'Unable to retrieve location.')
 
-      // Graceful fallback demo coordinates (Guwahati, Assam)
+      // Default initial operational center
       const fallbackLat = 26.1445
-      const fallbackLon = 91.7362
+      const fallbackLon = 91.7898
       const fallbackLoc = {
-        name: 'Guwahati (Demonstration Center)',
+        name: 'Guwahati Dispur Hub',
         district: 'Kamrup Metropolitan',
         state: 'Assam',
+        country: 'India',
         lat: fallbackLat,
         lon: fallbackLon,
         latitude: fallbackLat,
@@ -131,42 +128,67 @@ export default function MapView() {
 
       try {
         const pointRisk = await getCurrentGridRisk(fallbackLat, fallbackLon)
-        if (pointRisk && pointRisk.inCoverage) {
+        if (pointRisk) {
           setSelectedGridId(pointRisk.gridId)
           setSelectedGridGeometry(pointRisk.geometry)
           setRiskData(pointRisk)
         }
       } catch (e) {
-        console.error('Fallback lookup failed:', e)
+        console.error('Initial risk lookup failed:', e)
       }
     }
   }, [handleSelectLocation])
 
-  // 2. Quick Demo Place Selection Handler
-  const handleSelectQuickPlace = useCallback(async (placeName) => {
+  // 2. Dynamic Place Selection Handler (Supports Objects & Names for Global & Nearby Cities)
+  const handleSelectQuickPlace = useCallback(async (place) => {
     try {
       let top = null
-      const PRESET_PLACES = {
-        guwahati: { name: 'Guwahati Dispur Hub', district: 'Kamrup Metropolitan', state: 'Assam', lat: 26.1445, lon: 91.7898 },
-        boko: { name: 'Boko Bridge Corridor (NH-27)', district: 'Kamrup', state: 'Assam', lat: 25.9750, lon: 91.2330 },
-        jorabat: { name: 'Jorabat Transit Bottleneck', district: 'Kamrup Metropolitan', state: 'Assam', lat: 26.1012, lon: 91.8682 },
-        shillong: { name: 'Shillong Police Bazar & Plateau', district: 'East Khasi Hills', state: 'Meghalaya', lat: 25.5788, lon: 91.8933 },
-      }
 
-      const matchKey = Object.keys(PRESET_PLACES).find((k) => placeName.toLowerCase().includes(k))
-      if (matchKey) {
-        top = PRESET_PLACES[matchKey]
-      } else {
-        const candidates = await searchLocations(placeName)
-        if (candidates && candidates.length > 0) {
-          top = candidates[0]
+      if (place && typeof place === 'object' && place.lat != null && place.lon != null) {
+        top = {
+          name: place.fullName || place.name,
+          district: place.district || place.name,
+          state: place.state || place.country || 'Global Zone',
+          country: place.country || '',
+          lat: parseFloat(place.lat),
+          lon: parseFloat(place.lon),
+          latitude: parseFloat(place.lat),
+          longitude: parseFloat(place.lon),
+          gridId: place.gridId || null,
+        }
+      } else if (typeof place === 'string') {
+        const cleanName = place.toLowerCase().trim()
+        const found = ALL_CITIES.find(
+          (c) =>
+            c.id === cleanName ||
+            c.name.toLowerCase() === cleanName ||
+            c.name.toLowerCase().includes(cleanName) ||
+            cleanName.includes(c.name.toLowerCase())
+        )
+        if (found) {
+          top = {
+            name: found.fullName || found.name,
+            district: found.district || found.name,
+            state: found.state || found.country || 'Global Zone',
+            country: found.country || '',
+            lat: found.lat,
+            lon: found.lon,
+            latitude: found.lat,
+            longitude: found.lon,
+            gridId: found.gridId || null,
+          }
+        } else {
+          const candidates = await searchLocations(place)
+          if (candidates && candidates.length > 0) {
+            top = candidates[0]
+          }
         }
       }
 
       if (top) {
         handleSelectLocation(top)
         const pointRisk = await getCurrentGridRisk(top.lat, top.lon)
-        if (pointRisk && pointRisk.inCoverage) {
+        if (pointRisk) {
           setSelectedGridId(pointRisk.gridId)
           setSelectedGridGeometry(pointRisk.geometry)
           setRiskData(pointRisk)
@@ -177,7 +199,7 @@ export default function MapView() {
     }
   }, [handleSelectLocation])
 
-  // Auto-initialize Guwahati default zone on mount
+  // Auto-initialize initial active zone on mount if no active location
   useEffect(() => {
     handleSelectQuickPlace('Guwahati')
   }, [handleSelectQuickPlace])
