@@ -22,11 +22,16 @@ import {
   Target,
   CheckCircle2,
   Cpu,
+  Bot,
+  Globe,
+  Compass,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Tabs, TabPanel } from '../ui/Tabs.jsx'
 import { Button } from '../ui/Button.jsx'
 import { Spinner } from '../ui/Spinner.jsx'
 import { getGridRisk, getCurrentGridRisk, getActiveDisasterEvents } from '../services/riskApi.js'
+import { getNearbyCities, GLOBAL_METROS } from '../services/citiesCatalog.js'
 import { RouteSummaryPanel } from './RouteSummaryPanel.jsx'
 import styles from './ContextPanel.module.css'
 
@@ -38,6 +43,8 @@ function formatSourceName(raw) {
     .replace(/ Flood Alert| Flood Monitor| Landslide & Road Closure/i, '')
     .trim()
 }
+
+const EMPTY_ARRAY = Object.freeze([])
 
 // Fallback pre-calibrated demo intelligence hubs for Northeast India
 const DEMO_ZONES = {
@@ -409,6 +416,7 @@ export function ContextPanel({
   onClearRoute,
 }) {
   const [tab, setTab] = useState('overview')
+  const [zoneMode, setZoneMode] = useState('nearby')
   const [riskData, setRiskData] = useState(DEMO_ZONES.Guwahati)
   const [loading, setLoading] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -473,8 +481,8 @@ export function ContextPanel({
   const riskConfidence = riskData?.riskSummary?.riskConfidence ?? 0.95
   const dynamicChannels = riskData?.dynamicFactorChannels || {}
   const staticFactors = riskData?.staticFactors || {}
-  const activeEvents = riskData?.activeEvents || []
-  const regionalEvents = riskData?.regionalEvents || []
+  const activeEvents = riskData?.activeEvents || EMPTY_ARRAY
+  const regionalEvents = riskData?.regionalEvents || EMPTY_ARRAY
   const nearbyResources = riskData?.nearbyResources || [
     { name: 'Dispur Police Station & Command Hub', type: 'Police Station', distanceMeters: 420, phone: '0361-2260222' },
     { name: 'Gauhati Medical College & Hospital (GMCH)', type: 'Medical Facility', distanceMeters: 1250, phone: '108' },
@@ -528,14 +536,31 @@ export function ContextPanel({
     [statusLabel, deduplicatedEvents.length]
   )
 
-  const placeTitle = selectedLocation?.name || (riskData?.gridId ? `Grid ${riskData.gridId}` : 'Guwahati Hub')
+  const activeLat = selectedLocation?.lat ?? selectedLocation?.latitude ?? riskData?.center?.lat ?? 26.1445
+  const activeLon = selectedLocation?.lon ?? selectedLocation?.longitude ?? riskData?.center?.lon ?? 91.7898
+
+  const nearbyCities = useMemo(() => {
+    return getNearbyCities(activeLat, activeLon, 5)
+  }, [activeLat, activeLon])
+
+  const currentDistrictName = useMemo(() => {
+    if (selectedLocation?.district) return selectedLocation.district
+    if (selectedLocation?.locality) return selectedLocation.locality
+    if (selectedLocation?.name) {
+      return selectedLocation.name.split(',')[0].trim()
+    }
+    if (riskData?.district) return riskData.district
+    return 'Current District'
+  }, [selectedLocation, riskData])
+
+  const placeTitle = selectedLocation?.name || (riskData?.district ? `${riskData.district} Hub` : (riskData?.gridId ? `Grid ${riskData.gridId}` : 'Disaster Intelligence Hub'))
   const placeSubtitle = selectedLocation?.isLiveGps
-    ? `${selectedLocation.district}, ${selectedLocation.state} · GPS Accuracy ±${selectedLocation.accuracy || 10}m`
+    ? `${selectedLocation.district || selectedLocation.name}, ${selectedLocation.state || selectedLocation.country || ''} · GPS Accuracy ±${selectedLocation.accuracy || 10}m`
     : selectedLocation?.district
-    ? `${selectedLocation.district}, ${selectedLocation.state || 'Assam'}`
+    ? `${selectedLocation.district}, ${selectedLocation.state || selectedLocation.country || ''}`
     : riskData?.district
-    ? `${riskData.district}, ${riskData.state || 'Assam'}`
-    : 'Assam & Meghalaya Disaster Grid'
+    ? `${riskData.district}, ${riskData.state || 'Disaster Grid'}`
+    : (selectedLocation?.country || selectedLocation?.state || 'Global Disaster Monitoring Grid')
 
   // Circular gauge circumference (r = 38)
   const radius = 38
@@ -579,9 +604,15 @@ export function ContextPanel({
         {/* Header */}
         <div className={styles.header}>
           <div className={styles.headerLeft}>
-            <div className={styles.iconCircle}>
+            <button
+              type="button"
+              className={styles.iconCircle}
+              onClick={onLocateMe}
+              title="Detect live GPS location"
+              style={{ border: 'none', cursor: onLocateMe ? 'pointer' : 'default' }}
+            >
               <MapPin size={18} className={styles.pinIcon} />
-            </div>
+            </button>
             <div className={styles.headerTitles}>
               <div className={styles.titleRow}>
                 <h2 className={styles.title}>{placeTitle}</h2>
@@ -603,101 +634,191 @@ export function ContextPanel({
           </button>
         </div>
 
-        {/* Quick Demo Zone Switcher Bar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
-            background: 'rgba(241, 245, 249, 0.75)',
-            borderBottom: '1px solid rgba(226, 232, 240, 0.8)',
-            overflowX: 'auto',
-          }}
-        >
-          <span style={{ fontSize: '10px', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.04em', flexShrink: 0 }}>
-            Live Zones:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setRiskData(DEMO_ZONES.Guwahati)
-              if (onSelectQuickPlace) onSelectQuickPlace('Guwahati')
-            }}
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '3px 8px',
-              borderRadius: '999px',
-              border: '1px solid #cbd5e1',
-              background: riskData?.gridId === 'AS_00210744' ? '#2563eb' : '#ffffff',
-              color: riskData?.gridId === 'AS_00210744' ? '#ffffff' : '#334155',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Guwahati (25 Low)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setRiskData(DEMO_ZONES.Boko)
-              if (onSelectQuickPlace) onSelectQuickPlace('Boko')
-            }}
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '3px 8px',
-              borderRadius: '999px',
-              border: '1px solid #fecaca',
-              background: riskData?.gridId === 'AS_00239973' ? '#dc2626' : '#fff1f2',
-              color: riskData?.gridId === 'AS_00239973' ? '#ffffff' : '#991b1b',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Boko (68 Critical)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setRiskData(DEMO_ZONES.Jorabat)
-              if (onSelectQuickPlace) onSelectQuickPlace('Jorabat')
-            }}
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '3px 8px',
-              borderRadius: '999px',
-              border: '1px solid #fed7aa',
-              background: riskData?.gridId === 'AS_00224110' ? '#ea580c' : '#fff7ed',
-              color: riskData?.gridId === 'AS_00224110' ? '#ffffff' : '#9a3412',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Jorabat (60 High)
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setRiskData(DEMO_ZONES.Shillong)
-              if (onSelectQuickPlace) onSelectQuickPlace('Shillong')
-            }}
-            style={{
-              fontSize: '11px',
-              fontWeight: 700,
-              padding: '3px 8px',
-              borderRadius: '999px',
-              border: '1px solid #cbd5e1',
-              background: riskData?.gridId === 'ML_00104821' ? '#0284c7' : '#ffffff',
-              color: riskData?.gridId === 'ML_00104821' ? '#ffffff' : '#334155',
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            Shillong (24 Low)
-          </button>
+        {/* Dynamic Live Zones: Current District + Nearby Cities + Global Metros */}
+        <div className={styles.liveZonesContainer}>
+          <div className={styles.liveZonesTopRow}>
+            <div className={styles.liveZonesTitleGroup}>
+              <Radio size={12} style={{ color: '#ef4444' }} />
+              <h3 className={styles.liveZonesHeading}>Live Zones</h3>
+            </div>
+
+            <div className={styles.liveZonesModeTabs}>
+              <button
+                type="button"
+                className={`${styles.liveZoneModeBtn} ${zoneMode === 'nearby' ? styles.liveZoneModeBtnActive : ''}`}
+                onClick={() => setZoneMode('nearby')}
+                title="Show nearest cities to your active district"
+              >
+                <Compass size={11} />
+                <span>Nearby</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.liveZoneModeBtn} ${zoneMode === 'global' ? styles.liveZoneModeBtnActive : ''}`}
+                onClick={() => setZoneMode('global')}
+                title="Show international disaster monitoring hubs"
+              >
+                <Globe size={11} />
+                <span>Global Hubs</span>
+              </button>
+            </div>
+          </div>
+
+          <div className={styles.liveZonesScrollList}>
+            {/* 1. Dynamic Current District Pill (Always First & Highlighted) */}
+            <button
+              type="button"
+              className={styles.currentDistrictBadge}
+              onClick={() => {
+                if (selectedLocation) {
+                  if (onSelectQuickPlace) onSelectQuickPlace(selectedLocation)
+                }
+              }}
+              title={`Active District: ${currentDistrictName} (Live Risk Index: ${Math.round(riskScore)})`}
+            >
+              <MapPin size={11} style={{ flexShrink: 0 }} />
+              <span>{currentDistrictName}</span>
+              <span
+                style={{
+                  fontSize: '9.5px',
+                  fontWeight: 800,
+                  padding: '1px 5px',
+                  borderRadius: '999px',
+                  background: gaugeColor + '20',
+                  color: gaugeColor,
+                }}
+              >
+                {Math.round(riskScore)} {statusLabel}
+              </span>
+            </button>
+
+            {/* 2. Nearby Cities Mode */}
+            {zoneMode === 'nearby' &&
+              nearbyCities.map((city) => {
+                const isSelected =
+                  selectedLocation?.name?.toLowerCase().includes(city.name.toLowerCase()) ||
+                  riskData?.gridId === city.gridId
+
+                let chipBorder = '#e2e8f0'
+                let chipBg = '#ffffff'
+                let chipColor = '#334155'
+                let riskBadgeBg = '#f1f5f9'
+                let riskBadgeColor = '#475569'
+
+                if (city.riskStatus === 'CRITICAL') {
+                  chipBorder = isSelected ? '#dc2626' : '#fecaca'
+                  chipBg = isSelected ? '#dc2626' : '#fff1f2'
+                  chipColor = isSelected ? '#ffffff' : '#991b1b'
+                  riskBadgeBg = isSelected ? 'rgba(255,255,255,0.25)' : '#fee2e2'
+                  riskBadgeColor = isSelected ? '#ffffff' : '#dc2626'
+                } else if (city.riskStatus === 'HIGH') {
+                  chipBorder = isSelected ? '#ea580c' : '#fed7aa'
+                  chipBg = isSelected ? '#ea580c' : '#fff7ed'
+                  chipColor = isSelected ? '#ffffff' : '#9a3412'
+                  riskBadgeBg = isSelected ? 'rgba(255,255,255,0.25)' : '#ffedd5'
+                  riskBadgeColor = isSelected ? '#ffffff' : '#ea580c'
+                } else if (isSelected) {
+                  chipBorder = '#2563eb'
+                  chipBg = '#2563eb'
+                  chipColor = '#ffffff'
+                  riskBadgeBg = 'rgba(255,255,255,0.25)'
+                  riskBadgeColor = '#ffffff'
+                }
+
+                return (
+                  <button
+                    key={city.id || city.name}
+                    type="button"
+                    className={styles.zoneChip}
+                    onClick={() => {
+                      if (DEMO_ZONES[city.name]) {
+                        setRiskData(DEMO_ZONES[city.name])
+                      }
+                      if (onSelectQuickPlace) onSelectQuickPlace(city)
+                    }}
+                    style={{
+                      borderColor: chipBorder,
+                      background: chipBg,
+                      color: chipColor,
+                    }}
+                    title={`${city.fullName || city.name} · ${city.distanceKm} km from current location`}
+                  >
+                    <span>{city.name}</span>
+                    <span className={styles.zoneDistanceBadge}>{city.distanceKm} km</span>
+                    <span
+                      className={styles.zoneRiskBadge}
+                      style={{
+                        padding: '1px 5px',
+                        borderRadius: '999px',
+                        background: riskBadgeBg,
+                        color: riskBadgeColor,
+                      }}
+                    >
+                      {city.riskScore} {city.riskStatus.charAt(0) + city.riskStatus.slice(1).toLowerCase()}
+                    </span>
+                  </button>
+                )
+              })}
+
+            {/* 3. Global Reference Metros Mode */}
+            {zoneMode === 'global' &&
+              GLOBAL_METROS.map((city) => {
+                const isSelected =
+                  selectedLocation?.name?.toLowerCase().includes(city.name.toLowerCase()) ||
+                  selectedLocation?.district?.toLowerCase().includes(city.name.toLowerCase())
+
+                let chipBorder = '#e2e8f0'
+                let chipBg = '#ffffff'
+                let chipColor = '#334155'
+                let riskBadgeBg = '#f1f5f9'
+                let riskBadgeColor = '#475569'
+
+                if (city.riskStatus === 'CRITICAL' || city.riskStatus === 'HIGH') {
+                  chipBorder = isSelected ? '#ea580c' : '#fed7aa'
+                  chipBg = isSelected ? '#ea580c' : '#fff7ed'
+                  chipColor = isSelected ? '#ffffff' : '#9a3412'
+                  riskBadgeBg = isSelected ? 'rgba(255,255,255,0.25)' : '#ffedd5'
+                  riskBadgeColor = isSelected ? '#ffffff' : '#ea580c'
+                } else if (isSelected) {
+                  chipBorder = '#2563eb'
+                  chipBg = '#2563eb'
+                  chipColor = '#ffffff'
+                  riskBadgeBg = 'rgba(255,255,255,0.25)'
+                  riskBadgeColor = '#ffffff'
+                }
+
+                return (
+                  <button
+                    key={city.id}
+                    type="button"
+                    className={styles.zoneChip}
+                    onClick={() => {
+                      if (onSelectQuickPlace) onSelectQuickPlace(city)
+                    }}
+                    style={{
+                      borderColor: chipBorder,
+                      background: chipBg,
+                      color: chipColor,
+                    }}
+                    title={`${city.fullName} (${city.country}) · ${city.tag}`}
+                  >
+                    <span>{city.name}</span>
+                    <span className={styles.zoneDistanceBadge}>{city.country}</span>
+                    <span
+                      className={styles.zoneRiskBadge}
+                      style={{
+                        padding: '1px 5px',
+                        borderRadius: '999px',
+                        background: riskBadgeBg,
+                        color: riskBadgeColor,
+                      }}
+                    >
+                      {city.riskScore} {city.riskStatus.charAt(0) + city.riskStatus.slice(1).toLowerCase()}
+                    </span>
+                  </button>
+                )
+              })}
+          </div>
         </div>
 
         {/* Action Button: Get Directions */}
@@ -955,6 +1076,54 @@ export function ContextPanel({
                   <Activity size={13} />
                   <span>Inspect Live AI → Routing Pipeline</span>
                 </button>
+              </div>
+
+              {/* RESQ Autonomous Disaster Response Agent Card */}
+              <div
+                style={{
+                  marginTop: '10px',
+                  padding: '14px 16px',
+                  borderRadius: '12px',
+                  border: '1px solid #4f46e5',
+                  background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.04) 0%, rgba(224, 231, 255, 0.3) 100%)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Bot size={15} color="#4f46e5" />
+                    <span style={{ fontSize: '12.5px', fontWeight: 800, color: '#0f172a' }}>DISASTER RESPONSE AGENT</span>
+                  </div>
+                  <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 7px', borderRadius: '999px', background: '#e0e7ff', color: '#4338ca' }}>
+                    AUTONOMOUS
+                  </span>
+                </div>
+                <p style={{ margin: 0, fontSize: '11.5px', color: '#475569', lineHeight: 1.4 }}>
+                  Execute autonomous multi-step reasoning, tool execution, safety verification, and automated replanning.
+                </p>
+                <Link
+                  to="/agent"
+                  style={{
+                    background: '#4f46e5',
+                    color: '#ffffff',
+                    textDecoration: 'none',
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    boxShadow: '0 1px 2px rgba(79, 70, 229, 0.2)',
+                  }}
+                >
+                  <Bot size={13} />
+                  <span>Launch Disaster Response Agent (/agent)</span>
+                </Link>
               </div>
 
               {/* Mathematical Fusion Formula Card */}

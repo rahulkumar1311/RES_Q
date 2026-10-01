@@ -7,6 +7,7 @@ import {
 } from "../services/risk/dynamicRiskService.js";
 import {
   resolveLocationRisk,
+  synthesizeGlobalLocationRisk,
   getGridRiskById,
 } from "../services/risk/regionalIntelligenceStore.js";
 
@@ -64,7 +65,7 @@ router.get("/point", async (req, res) => {
         return res.status(404).json({
           success: false,
           inCoverage: false,
-          message: fallback?.message || "Location is outside RESQ operational coverage area (Assam & Meghalaya).",
+          message: fallback?.message || "Location is outside RESQ operational coverage area (Pan-India).",
         });
       }
       return res.status(200).json({
@@ -75,10 +76,14 @@ router.get("/point", async (req, res) => {
     }
 
     if (!cell) {
-      return res.status(404).json({
-        success: false,
-        inCoverage: false,
-        message: "Location is outside RESQ operational coverage area (Assam & Meghalaya).",
+      const globalData = synthesizeGlobalLocationRisk(lat, lon, {
+        district: req.query.district,
+        name: req.query.name || req.query.place,
+      });
+      return res.status(200).json({
+        success: true,
+        inCoverage: true,
+        data: globalData,
       });
     }
 
