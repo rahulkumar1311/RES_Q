@@ -1,141 +1,905 @@
+/* AboutView: Rich Glassmorphism, Interactive Pipeline Diagram & Global Disaster Aesthetics */
+
 .page {
   position: absolute;
-  inset: 0 var(--sp-3) var(--sp-3);
+  top: 0;
+  left: var(--sp-3, 12px);
+  right: var(--sp-3, 12px);
+  bottom: var(--sp-3, 12px);
   overflow-y: auto;
-  background: var(--tile-bg);
-  border-radius: var(--r-tile);
-  box-shadow: var(--shadow-tile);
+  overflow-x: hidden;
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: var(--r-tile, 18px);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
 }
+
 
 .inner {
-  max-width: 780px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: var(--sp-12) var(--sp-6);
+  padding: 3rem 1.5rem 5rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: var(--sp-8);
+  gap: 2.5rem;
 }
 
-.head {
+/* ==========================================================================
+   1. HERO SECTION
+   ========================================================================== */
+.heroSection {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3);
-}
-
-.title {
-  font-size: var(--fs-xl);
-  line-height: var(--lh-tight);
-  letter-spacing: -0.025em;
-  max-width: 20ch;
-}
-
-.lede {
-  font-size: var(--fs-base);
-  color: var(--text-muted);
-  line-height: var(--lh-normal);
-  max-width: 62ch;
-}
-
-.meta {
-  font-size: var(--fs-xs);
-  color: var(--text-faint);
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4);
   align-items: flex-start;
+  gap: 1.25rem;
+  padding: 2.5rem;
+  background: radial-gradient(120% 120% at 50% 0%, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
 }
 
-.sectionLede {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  max-width: 62ch;
+.heroSection::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #2563eb 0%, #7c3aed 50%, #059669 100%);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: var(--sp-5);
-  width: 100%;
-}
-
-.card {
+.heroBadgeRow {
   display: flex;
-  flex-direction: column;
-  gap: var(--sp-2);
-  padding-left: var(--sp-4);
-  border-left: 1px solid var(--border);
-}
-
-.cardTitle {
-  font-size: var(--fs-base);
-  font-weight: var(--fw-semibold);
-}
-
-.cardBody {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  line-height: var(--lh-normal);
-}
-
-.bands {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-1);
-  width: 100%;
-  max-width: 420px;
-}
-
-.bandRow {
-  display: grid;
-  grid-template-columns: 10px 1fr auto;
   align-items: center;
-  gap: var(--sp-3);
-  padding: var(--sp-2) 0;
-  border-bottom: 1px solid var(--border-subtle);
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
-.bandSwatch {
+.chipPulse {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.pulseDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #2563eb;
+  animation: pulseGlow 2s infinite ease-in-out;
+}
+
+@keyframes pulseGlow {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+
+.hardwareBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(124, 58, 237, 0.08);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+  color: #7c3aed;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.heroTitle {
+  font-size: 2.25rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  max-width: 24ch;
+  margin: 0;
+}
+
+.gradientText {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.heroSubtitle {
+  font-size: 1rem;
+  color: #475569;
+  line-height: 1.65;
+  max-width: 68ch;
+  margin: 0;
+}
+
+.metricsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  width: 100%;
+  margin-top: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+}
+
+.metricVal {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  font-family: var(--font-mono, monospace);
+}
+
+.metricLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #2563eb;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.metricSub {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+/* ==========================================================================
+   2. SECTION CARD CONTAINER
+   ========================================================================== */
+.sectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-radius: 18px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sectionIcon {
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+.sectionTitle {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.sectionDesc {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 4px 0 0 0;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   3. INTERACTIVE PIPELINE FLOWCHART
+   ========================================================================== */
+.pipelineFlow {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.pipelineStepWrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.pipelineNode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 14px 12px;
+  border-radius: 14px;
+  border: 2px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+}
+
+.pipelineNode:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+}
+
+.pipelineNodeActive {
+  background: #ffffff !important;
+  border-color: #2563eb !important;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+.nodeTopRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.nodeStepNum {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  font-family: var(--font-mono, monospace);
+}
+
+.nodeStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.nodeIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.nodeTitle {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.25;
+}
+
+.nodeSub {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.pipelineConnector {
+  display: flex;
+  align-items: center;
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
+
+.connectorLine {
+  display: none;
+}
+
+.connectorArrow {
+  color: #94a3b8;
+}
+
+/* Active Stage Detail Card */
+.stageDetailCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.stageDetailHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.stageDetailLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stageBadge {
+  display: inline-block;
+  align-self: flex-start;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.stageName {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 2px 0 0 0;
+}
+
+.stageTagline {
+  font-size: 0.875rem;
+  color: #2563eb;
+  font-weight: 600;
+  margin: 0;
+}
+
+.stageDescription {
+  font-size: 0.925rem;
+  color: #334155;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.stageSpecsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.specBox {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: #ffffff;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.specLabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.specValue {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   4. SIX HAZARD CHANNELS GRID
+   ========================================================================== */
+.channelsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.channelCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.channelCard:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05);
+}
+
+.channelHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.channelIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.channelCategory {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.04em;
+}
+
+.channelWeight {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.channelTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.channelDesc {
+  font-size: 0.8125rem;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ==========================================================================
+   5. INTERACTIVE RISK BANDS & PROTOCOLS
+   ========================================================================== */
+.bandSelectorGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.bandSelectorCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.bandSelectorCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.bandSelectorCardActive {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.bandPill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px solid;
+  letter-spacing: 0.04em;
+}
+
+.bandScoreRange {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #0f172a;
+  font-family: var(--font-mono, monospace);
+}
+
+.bandShortTitle {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.bandProtocolCard {
+  border: 1px solid;
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.protocolHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.protocolTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.protocolStatusDot {
   width: 10px;
   height: 10px;
-  border-radius: 2px;
-  background: var(--risk-solid);
+  border-radius: 50%;
 }
 
-.bandName {
-  font-size: var(--fs-micro);
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-label);
-  color: var(--risk-color);
+.protocolHeading {
+  font-size: 0.95rem;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: 0.02em;
 }
 
-.bandRange {
-  font-size: var(--fs-xs);
-  color: var(--text-faint);
+.protocolBadge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
 }
 
-.statusRow {
+.protocolGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.protocolItem {
+  background: #ffffff;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
   display: flex;
-  align-items: flex-start;
-  gap: var(--sp-3);
+  flex-direction: column;
+  gap: 6px;
 }
 
-.statusText {
-  font-size: var(--fs-sm);
-  color: var(--text-muted);
-  line-height: var(--lh-normal);
-  max-width: 62ch;
+.protocolItemTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-@media (max-width: 767px) {
-  .inner {
-    padding: var(--sp-8) var(--sp-4);
-    gap: var(--sp-6);
+.protocolItemText {
+  font-size: 12.5px;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ==========================================================================
+   6. GLOBAL SCOPE & OFFLINE PHILOSOPHY
+   ========================================================================== */
+.philosophyGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.philosophyCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.philosophyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.03);
+}
+
+.philosophyTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 4px 0 0 0;
+}
+
+.philosophyText {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0;
+}
+
+/* ==========================================================================
+   7. CALL TO ACTION FOOTER BANNER
+   ========================================================================== */
+/* ==========================================================================
+   7. CALL TO ACTION FOOTER BANNER (Matches RESQ Core Technical Design System)
+   ========================================================================== */
+.ctaBanner {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding: 2.25rem 2.5rem;
+  background: radial-gradient(120% 120% at 0% 0%, #ffffff 0%, #f8fafc 100%);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
+}
+
+.ctaBanner::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3.5px;
+  background: linear-gradient(90deg, #2563eb 0%, #0284c7 45%, #10b981 100%);
+}
+
+.ctaWatermark {
+  position: absolute;
+  right: -20px;
+  bottom: -40px;
+  color: #0f172a;
+  opacity: 0.03;
+  pointer-events: none;
+  transform: rotate(-10deg);
+  transition: opacity 0.3s ease;
+}
+
+.ctaBanner:hover .ctaWatermark {
+  opacity: 0.05;
+}
+
+.ctaLeft {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.ctaBadgeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.ctaChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+  color: #2563eb;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.ctaTelePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ctaTitle {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.ctaSubtitle {
+  font-size: 0.925rem;
+  color: #475569;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 58ch;
+}
+
+.ctaFeatureTags {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.ctaFeatureTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.checkIcon {
+  color: #16a34a;
+}
+
+.ctaActions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.primaryCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  background: #2563eb !important;
+  color: #ffffff !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  border: 1px solid #1d4ed8 !important;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.22) !important;
+  height: 42px !important;
+  padding: 0 20px !important;
+  border-radius: 10px !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.primaryCtaBtn:hover {
+  background: #1d4ed8 !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+.primaryCtaBtn:active {
+  transform: translateY(0);
+}
+
+.secondaryCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  background: #ffffff !important;
+  color: #1e293b !important;
+  font-size: 13.5px !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-weight: 700 !important;
+  height: 42px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.secondaryCtaBtn:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06) !important;
+  transform: translateY(-1px);
+}
+
+.secondaryCtaBtn:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   8. RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+@media (max-width: 900px) {
+  .heroTitle {
+    font-size: 1.75rem;
   }
+  .metricsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .bandSelectorGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ctaBanner {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.75rem;
+  }
+  .ctaActions {
+    width: 100%;
+    flex-direction: column;
+  }
+  .primaryCtaBtn, .secondaryCtaBtn {
+    width: 100% !important;
+  }
+}
 
-  .title {
-    font-size: var(--fs-lg);
+@media (max-width: 640px) {
+  .inner {
+    padding: 1.5rem 1rem 3rem 1rem;
+    gap: 1.5rem;
+  }
+  .heroSection {
+    padding: 1.5rem;
+  }
+  .metricsRow {
+    grid-template-columns: 1fr;
+  }
+  .sectionCard {
+    padding: 1.25rem;
+  }
+  .pipelineFlow {
+    flex-direction: column;
+  }
+  .pipelineStepWrapper {
+    width: 100%;
+  }
+  .pipelineConnector {
+    transform: rotate(90deg);
+    margin: 4px auto;
   }
 }

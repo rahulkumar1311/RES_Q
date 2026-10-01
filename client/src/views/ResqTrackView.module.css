@@ -1,10 +1,9 @@
 /* Frosted Glassmorphism Styles for Public/Trusted RESQ Track View */
 
 .trackContainer {
+  position: absolute;
+  inset: 0;
   display: flex;
-  width: 100%;
-  height: calc(100vh - 62px);
-  position: relative;
   overflow: hidden;
   background: radial-gradient(circle at 50% 0%, #f0f9ff 0%, #f8fafc 100%);
 }

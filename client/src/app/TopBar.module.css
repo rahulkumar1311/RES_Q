@@ -5,16 +5,19 @@
   align-items: center;
   justify-content: space-between;
   height: 62px;
-  padding: 0 20px;
+  padding: 0 16px;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(28px) saturate(190%);
   -webkit-backdrop-filter: blur(28px) saturate(190%);
   border-bottom: 1px solid rgba(255, 255, 255, 0.85);
   box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(0, 0, 0, 0.02);
   z-index: 1000;
-  gap: 16px;
+  gap: 12px;
   position: relative;
   box-sizing: border-box;
+  width: 100%;
+  max-width: 100vw;
+  overflow: visible;
   transition: all 0.2s ease;
 }
 
@@ -55,7 +58,7 @@
   background: rgba(240, 253, 244, 0.85);
   border: 1px solid rgba(187, 247, 208, 0.9);
   border-radius: 9999px;
-  box-shadow: 0 1px 3px rgba(22, 163, 74, 0.08);
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08);
 }
 
 .liveDot {
@@ -88,9 +91,10 @@
 /* Center Search Box */
 .search {
   position: relative;
-  flex: 1;
-  max-width: 540px;
-  margin: 0 auto;
+  flex: 1 1 auto;
+  max-width: 440px;
+  min-width: 160px;
+  margin: 0 8px;
 }
 
 .searchInner {
@@ -230,8 +234,9 @@
 .right {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* Nav links pill group */
@@ -409,7 +414,7 @@
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 13px !important;
+  padding: 0 14px !important;
   background: rgba(254, 242, 242, 0.95) !important;
   border: 1px solid rgba(254, 202, 202, 0.95) !important;
   border-radius: 9999px !important;
@@ -419,6 +424,9 @@
   cursor: pointer;
   transition: all 0.15s ease !important;
   box-shadow: 0 1px 3px rgba(220, 38, 38, 0.08) !important;
+  flex-shrink: 0 !important;
+  white-space: nowrap !important;
+  margin-right: 2px;
 }
 
 .sos:hover {
@@ -448,20 +456,63 @@
   }
 }
 
+@media (max-width: 1280px) {
+  .search {
+    max-width: 300px;
+  }
+  .userNameHeader {
+    max-width: 80px;
+  }
+  .navLink {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 1080px) {
+  .search {
+    max-width: 200px;
+  }
+  .userInfoCol {
+    display: none;
+  }
+  .userControl {
+    padding: 3px 5px;
+  }
+  .reportDamageBtn span {
+    display: none;
+  }
+  .reportDamageBtn {
+    padding: 0 10px;
+  }
+}
+
 @media (max-width: 768px) {
+  .bar {
+    padding: 0 10px;
+    gap: 8px;
+  }
   .search {
     display: none;
   }
   .nav {
+    display: flex;
+    padding: 2px;
+  }
+  .navLink {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+  .reportDamageBtn {
+    display: none;
+  }
+  .userInfoCol {
     display: none;
   }
   .sosLabel {
     display: none;
   }
   .localAiBadge {
-    padding: 0 6px;
-  }
-  .aiStatusText {
     display: none;
   }
 }

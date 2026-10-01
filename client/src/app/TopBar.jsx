@@ -1,7 +1,7 @@
 // TopBar navigation header with live search auto-complete, status, user profile, and operational modals
 
 import { useState, useEffect, useRef } from 'react'
-import { NavLink, Link } from 'react-router-dom'
+import { NavLink, Link, useLocation } from 'react-router-dom'
 import {
   Search,
   Bell,
@@ -30,10 +30,12 @@ import styles from './TopBar.module.css'
 const NAV_ITEMS = [
   { to: '/', label: 'Map', end: true },
   { to: '/resq', label: 'RESQ Mode', end: false },
+  { to: '/agent', label: 'Agent', end: false },
   { to: '/about', label: 'About', end: false },
 ]
 
 export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
+  const location = useLocation()
   const { user, isAdmin, canEdit, isViewer } = useAuth()
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
@@ -44,10 +46,22 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
   const [isOpen, setIsOpen] = useState(false)
   const searchWrapperRef = useRef(null)
 
-  // Listen for open demo event from context panels
+  // Automatically dismiss all overlays/modals when navigating to a new route
+  useEffect(() => {
+    setIsAiDemoOpen(false)
+    setIsReportOpen(false)
+    setIsSosOpen(false)
+    setIsProfileOpen(false)
+  }, [location.pathname])
+
+  // Listen for open demo event from context panels or url query param
   useEffect(() => {
     const handleOpenAiDemo = () => setIsAiDemoOpen(true)
     window.addEventListener('resq:open-ai-demo', handleOpenAiDemo)
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('demo') === 'ai') {
+      setIsAiDemoOpen(true)
+    }
     return () => window.removeEventListener('resq:open-ai-demo', handleOpenAiDemo)
   }, [])
 
@@ -134,8 +148,12 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
     <header className={styles.bar}>
       <div className={styles.brandWrapper}>
         <Link to="/" className={styles.brand}>
-          <BrandMark height={44} />
+          <BrandMark height={32} />
         </Link>
+        <div className={styles.liveBadge}>
+          <span className={styles.liveDot} />
+          <span className={styles.liveText}>LIVE</span>
+        </div>
       </div>
 
       {showSearch && (
@@ -146,7 +164,7 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onFocus={() => candidates.length > 0 && setIsOpen(true)}
-              placeholder="Search place, district, bridge, or grid ID (e.g. Guwahati, Boko, Saraighat, AS_00210744)"
+              placeholder="Search any place, city, district, or grid ID (e.g. Delhi, Tokyo, London, Guwahati...)"
               aria-label="Search location"
               controlClassName={styles.searchControl}
             />
@@ -232,31 +250,6 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
             </NavLink>
           )}
         </nav>
-
-        {/* Local On-Device AI Status Badge (Qualcomm Snapdragon) */}
-        <button
-          type="button"
-          onClick={() => setIsAiDemoOpen(true)}
-          className={cx(
-            styles.localAiBadge,
-            aiStatus?.isReady ? styles.localAiReady : styles.localAiUnavailable
-          )}
-          title={
-            aiStatus?.isReady
-              ? `LOCAL AI: READY — On-device MobileNetV3 active on ${aiStatus?.targetHardware || 'Snapdragon NPU'}. Click to inspect Edge AI Demonstration Panel.`
-              : `LOCAL AI: UNAVAILABLE — ${aiStatus?.loadError || 'Local model not initialized. Click to inspect Edge AI Demonstration Panel.'}`
-          }
-        >
-          <span
-            className={
-              aiStatus?.isReady ? styles.aiPulseDotReady : styles.aiPulseDotUnavailable
-            }
-          />
-          <Cpu size={12} className={styles.aiCpuIcon} />
-          <span className={styles.aiStatusText}>
-            {aiStatus?.system_status || (aiLoading ? 'LOCAL AI: CHECKING...' : 'LOCAL AI: READY')}
-          </span>
-        </button>
 
         {/* Operational actions for Operator & Admin */}
         {canEdit && (
@@ -360,7 +353,7 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
 
       {/* Snapdragon Edge AI Demonstration Panel */}
       <SnapdragonDemoPanel
-        isOpen={isAiDemoOpen}
+        isOpen={isAiDemoOpen && location.pathname !== '/agent'}
         onClose={() => setIsAiDemoOpen(false)}
       />
     </header>

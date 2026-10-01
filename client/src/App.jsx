@@ -10,6 +10,7 @@ import ResqView from './views/ResqView.jsx'
 import ResqTrackView from './views/ResqTrackView.jsx'
 import AdminView from './views/AdminView.jsx'
 import UnauthorizedView from './views/UnauthorizedView.jsx'
+import AgentView from './views/AgentView.jsx'
 
 export default function App() {
   return (
@@ -52,6 +53,16 @@ export default function App() {
             element={
               <AppShell>
                 <AboutView />
+              </AppShell>
+            }
+          />
+
+          {/* Autonomous Disaster Response Agent */}
+          <Route
+            path="/agent"
+            element={
+              <AppShell>
+                <AgentView />
               </AppShell>
             }
           />
