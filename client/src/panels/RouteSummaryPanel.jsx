@@ -249,9 +249,11 @@ export function RouteSummaryPanel({
           type="button"
           className={styles.startNavBtn}
           onClick={onStartNavigation}
+          disabled={distanceKm === 0}
+          style={distanceKm === 0 ? { opacity: 0.6, cursor: 'default' } : undefined}
         >
           <Navigation size={18} />
-          <span>Start Navigation</span>
+          <span>{distanceKm === 0 ? 'Already at Destination' : 'Start Navigation'}</span>
         </button>
       </div>
     </div>

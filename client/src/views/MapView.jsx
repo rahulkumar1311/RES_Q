@@ -145,11 +145,26 @@ export default function MapView() {
   // 2. Quick Demo Place Selection Handler
   const handleSelectQuickPlace = useCallback(async (placeName) => {
     try {
-      const candidates = await searchLocations(placeName)
-      if (candidates && candidates.length > 0) {
-        const top = candidates[0]
-        handleSelectLocation(top)
+      let top = null
+      const PRESET_PLACES = {
+        guwahati: { name: 'Guwahati Dispur Hub', district: 'Kamrup Metropolitan', state: 'Assam', lat: 26.1445, lon: 91.7898 },
+        boko: { name: 'Boko Bridge Corridor (NH-27)', district: 'Kamrup', state: 'Assam', lat: 25.9750, lon: 91.2330 },
+        jorabat: { name: 'Jorabat Transit Bottleneck', district: 'Kamrup Metropolitan', state: 'Assam', lat: 26.1012, lon: 91.8682 },
+        shillong: { name: 'Shillong Police Bazar & Plateau', district: 'East Khasi Hills', state: 'Meghalaya', lat: 25.5788, lon: 91.8933 },
+      }
 
+      const matchKey = Object.keys(PRESET_PLACES).find((k) => placeName.toLowerCase().includes(k))
+      if (matchKey) {
+        top = PRESET_PLACES[matchKey]
+      } else {
+        const candidates = await searchLocations(placeName)
+        if (candidates && candidates.length > 0) {
+          top = candidates[0]
+        }
+      }
+
+      if (top) {
+        handleSelectLocation(top)
         const pointRisk = await getCurrentGridRisk(top.lat, top.lon)
         if (pointRisk && pointRisk.inCoverage) {
           setSelectedGridId(pointRisk.gridId)
@@ -161,6 +176,11 @@ export default function MapView() {
       console.error('Quick place selection error:', err)
     }
   }, [handleSelectLocation])
+
+  // Auto-initialize Guwahati default zone on mount
+  useEffect(() => {
+    handleSelectQuickPlace('Guwahati')
+  }, [handleSelectQuickPlace])
 
   // 3. Map Grid Cell Click Handler
   const handleGridSelect = useCallback(async (props) => {

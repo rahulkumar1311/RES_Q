@@ -75,11 +75,27 @@ export function SourceAddressModal({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGpsLoading(false)
+        const curLat = pos.coords.latitude
+        const curLon = pos.coords.longitude
+
+        if (destination) {
+          const destLat = Number(destination.lat ?? destination.latitude)
+          const destLon = Number(destination.lon ?? destination.longitude)
+          const dLat = Math.abs(curLat - destLat)
+          const dLon = Math.abs(curLon - destLon)
+          if (!isNaN(destLat) && !isNaN(destLon) && dLat < 0.0001 && dLon < 0.0001) {
+            setGpsError(
+              'Your destination is already set to your current location. Please switch to "Enter Address Manually" to choose a starting location, or select a new destination on the map.'
+            )
+            return
+          }
+        }
+
         const origin = {
-          lat: pos.coords.latitude,
-          lon: pos.coords.longitude,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
+          lat: curLat,
+          lon: curLon,
+          latitude: curLat,
+          longitude: curLon,
           name: 'Current Location',
           displayName: 'Your Current Location (GPS)',
           district: 'Live GPS',
@@ -104,16 +120,32 @@ export function SourceAddressModal({
         maximumAge: 2000,
       }
     )
-  }, [onSelectOrigin])
+  }, [onSelectOrigin, destination])
 
   // Handle candidate selection from manual search
   const handleSelectCandidate = (candidate) => {
     if (!candidate) return
+    const candLat = Number(candidate.lat ?? candidate.latitude)
+    const candLon = Number(candidate.lon ?? candidate.longitude)
+
+    if (destination) {
+      const destLat = Number(destination.lat ?? destination.latitude)
+      const destLon = Number(destination.lon ?? destination.longitude)
+      const dLat = Math.abs(candLat - destLat)
+      const dLon = Math.abs(candLon - destLon)
+      if (!isNaN(destLat) && !isNaN(destLon) && dLat < 0.0001 && dLon < 0.0001) {
+        setGpsError(
+          'Starting location and destination cannot be the same place. Please choose a different starting point.'
+        )
+        return
+      }
+    }
+
     const origin = {
-      lat: Number(candidate.lat ?? candidate.latitude),
-      lon: Number(candidate.lon ?? candidate.longitude),
-      latitude: Number(candidate.lat ?? candidate.latitude),
-      longitude: Number(candidate.lon ?? candidate.longitude),
+      lat: candLat,
+      lon: candLon,
+      latitude: candLat,
+      longitude: candLon,
       name: candidate.name,
       displayName: candidate.displayName || candidate.name,
       district: candidate.district || 'Regional',

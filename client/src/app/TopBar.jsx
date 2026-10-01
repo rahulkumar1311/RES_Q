@@ -14,6 +14,7 @@ import {
   Plus,
   Eye,
   Radio,
+  Cpu,
 } from 'lucide-react'
 import { TextField, Badge } from '../ui/index.js'
 import { cx } from '../lib/cx.js'
@@ -23,6 +24,7 @@ import { useAuth } from './authContext.jsx'
 import { UserProfileModal } from './UserProfileModal.jsx'
 import { DamageReportModal } from '../panels/DamageReportModal.jsx'
 import { EmergencyBroadcastModal } from '../panels/EmergencyBroadcastModal.jsx'
+import { SnapdragonDemoPanel } from '../panels/SnapdragonDemoPanel.jsx'
 import styles from './TopBar.module.css'
 
 const NAV_ITEMS = [
@@ -36,10 +38,53 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isReportOpen, setIsReportOpen] = useState(false)
   const [isSosOpen, setIsSosOpen] = useState(false)
+  const [isAiDemoOpen, setIsAiDemoOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [candidates, setCandidates] = useState([])
   const [isOpen, setIsOpen] = useState(false)
   const searchWrapperRef = useRef(null)
+
+  // Listen for open demo event from context panels
+  useEffect(() => {
+    const handleOpenAiDemo = () => setIsAiDemoOpen(true)
+    window.addEventListener('resq:open-ai-demo', handleOpenAiDemo)
+    return () => window.removeEventListener('resq:open-ai-demo', handleOpenAiDemo)
+  }, [])
+
+  // On-device Snapdragon Local AI Status
+  const [aiStatus, setAiStatus] = useState(null)
+  const [aiLoading, setAiLoading] = useState(true)
+
+  useEffect(() => {
+    let isMounted = true
+    const checkAiStatus = async () => {
+      try {
+        const res = await fetch('/api/ai/status')
+        if (!res.ok) throw new Error(`HTTP ${res.status}`)
+        const json = await res.json()
+        if (isMounted && json.data) {
+          setAiStatus(json.data)
+        }
+      } catch (err) {
+        if (isMounted) {
+          setAiStatus({
+            isReady: false,
+            system_status: 'LOCAL AI: UNAVAILABLE',
+            loadError: err.message,
+          })
+        }
+      } finally {
+        if (isMounted) setAiLoading(false)
+      }
+    }
+
+    checkAiStatus()
+    const interval = setInterval(checkAiStatus, 30000)
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
+  }, [])
 
   // Debounced geocoding search
   useEffect(() => {
@@ -188,6 +233,31 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
           )}
         </nav>
 
+        {/* Local On-Device AI Status Badge (Qualcomm Snapdragon) */}
+        <button
+          type="button"
+          onClick={() => setIsAiDemoOpen(true)}
+          className={cx(
+            styles.localAiBadge,
+            aiStatus?.isReady ? styles.localAiReady : styles.localAiUnavailable
+          )}
+          title={
+            aiStatus?.isReady
+              ? `LOCAL AI: READY — On-device MobileNetV3 active on ${aiStatus?.targetHardware || 'Snapdragon NPU'}. Click to inspect Edge AI Demonstration Panel.`
+              : `LOCAL AI: UNAVAILABLE — ${aiStatus?.loadError || 'Local model not initialized. Click to inspect Edge AI Demonstration Panel.'}`
+          }
+        >
+          <span
+            className={
+              aiStatus?.isReady ? styles.aiPulseDotReady : styles.aiPulseDotUnavailable
+            }
+          />
+          <Cpu size={12} className={styles.aiCpuIcon} />
+          <span className={styles.aiStatusText}>
+            {aiStatus?.system_status || (aiLoading ? 'LOCAL AI: CHECKING...' : 'LOCAL AI: READY')}
+          </span>
+        </button>
+
         {/* Operational actions for Operator & Admin */}
         {canEdit && (
           <button
@@ -286,6 +356,12 @@ export function TopBar({ onSosOpen, showSearch = true, onSelectPlace }) {
       <EmergencyBroadcastModal
         isOpen={isSosOpen}
         onClose={() => setIsSosOpen(false)}
+      />
+
+      {/* Snapdragon Edge AI Demonstration Panel */}
+      <SnapdragonDemoPanel
+        isOpen={isAiDemoOpen}
+        onClose={() => setIsAiDemoOpen(false)}
       />
     </header>
   )

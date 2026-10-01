@@ -44,7 +44,7 @@ export async function getActiveDisasterEvents() {
     const res = await fetch(`${API_BASE}/news/events/active`)
     if (!res.ok) throw new Error(`Active events query failed: HTTP ${res.status}`)
     const json = await res.json()
-    return json.data || []
+    return json.data || json.events || []
   } catch (err) {
     console.error('getActiveDisasterEvents error:', err.message)
     return []

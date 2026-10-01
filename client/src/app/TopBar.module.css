@@ -458,4 +458,92 @@
   .sosLabel {
     display: none;
   }
+  .localAiBadge {
+    padding: 0 6px;
+  }
+  .aiStatusText {
+    display: none;
+  }
 }
+
+/* Local On-Device AI Status Badge */
+.localAiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 11px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  user-select: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.localAiReady {
+  background: rgba(236, 253, 245, 0.95);
+  border: 1px solid rgba(167, 243, 208, 0.95);
+  color: #047857;
+  box-shadow: 0 1px 3px rgba(16, 185, 129, 0.08);
+}
+
+.localAiReady:hover {
+  background: #d1fae5;
+  border-color: #6ee7b7;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.16);
+}
+
+.localAiUnavailable {
+  background: rgba(254, 243, 199, 0.95);
+  border: 1px solid rgba(253, 230, 138, 0.95);
+  color: #b45309;
+  box-shadow: 0 1px 3px rgba(245, 158, 11, 0.08);
+}
+
+.localAiUnavailable:hover {
+  background: #fef3c7;
+  border-color: #f59e0b;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.16);
+}
+
+.aiPulseDotReady {
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  background-color: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  animation: aiPulse 2s infinite ease-in-out;
+}
+
+.aiPulseDotUnavailable {
+  width: 6.5px;
+  height: 6.5px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+}
+
+@keyframes aiPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+.aiCpuIcon {
+  flex-shrink: 0;
+  opacity: 0.9;
+}
+
+.aiStatusText {
+  white-space: nowrap;
+}
+
